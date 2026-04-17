@@ -26,7 +26,7 @@ llm = OllamaLLM(model=LOCAL_LLM_MODEL, temperature=0)
 # RAG Helper Functions
 # ===================================================
 def load_rag_json(filename):
-    """Safely loads a JSON file from the 6104/rag/ directory."""
+    """Safely loads a JSON file from the local RAG directory."""
     base_dir = Path(__file__).resolve().parent
     filepath = base_dir / "rag" / filename
     try:
@@ -105,7 +105,7 @@ def get_justification(score_dict, job_data):
         return f"Justification currently unavailable: {str(e)}"
 
 def check_keyword_relevance(keyword):
-    """Uses LLM to verify if a search keyword is related to IT/DS/AI/ML."""
+    """Uses LLM to verify if a search keyword is related to tech industries."""
     prompt = f"""
     Is the job search keyword '{keyword}' related to Information Technology (IT), Data Science, Machine Learning (ML), or Artificial Intelligence (AI)?
     Respond STRICTLY with a valid JSON dictionary: {{"is_tech_related": true}} or {{"is_tech_related": false}}
@@ -119,9 +119,9 @@ def check_keyword_relevance(keyword):
         return True
 
 def filter_job_database(df, target_level):
-    """Applies the strict 180-day and relevance filters to the dataframe."""
-    df = df[df['is_Related'] == True]
-    df = df[df['Level_of_career'].str.lower() == target_level.lower()]
+    """Applies strict 180-day timeframes and role relevance filters to the dataframe."""
+    df = df[df['is_Related'].astype(str).str.lower() == 'true']
+    df = df[df['Level_of_career'].astype(str).str.lower() == target_level.lower()]
     
     cutoff_date = datetime.now() - timedelta(days=180)
     
@@ -135,7 +135,7 @@ def filter_job_database(df, target_level):
     return df
 
 # ===================================================
-# MCP Setup
+# MCP Orchestration Setup
 # ===================================================
 def normalize_tool_output(result):
     if hasattr(result, "content"):
@@ -194,8 +194,8 @@ def run_agent(action, payload=None):
         raw_mcp = _rt.call_tool("cv_parser", "parse_cv", {"pdf_base64": payload})
         return normalize_tool_output(raw_mcp)
 
-# ----------------------------------------------------
-    # NEW: QUICK CAREER LEVEL EVALUATOR (SIDEBAR)
+    # ----------------------------------------------------
+    # CAREER LEVEL EVALUATOR (SIDEBAR)
     # ----------------------------------------------------
     if action == "evaluate_levels":
         cv_data = payload.get("cv_data")
@@ -207,8 +207,7 @@ def run_agent(action, payload=None):
         results = {}
         
         def score_level(level, data):
-            # Create a mock job. By leaving skills blank, we force server(fit_score).py 
-            # to automatically load the skills from the RAG file for this exact level!
+            # Create a mock job to force the server to load RAG skills for this specific level
             mock_job = {
                 "JobTitle": f"Standard {level} AI/Data Role",
                 "CompanyName": "Tech Industry",
@@ -223,8 +222,7 @@ def run_agent(action, payload=None):
             score_dict = normalize_tool_output(score_raw)
             return level, score_dict, data.get("min_experience_years", 0)
 
-        # Run all 4 evaluations concurrently to save time
-        import concurrent.futures
+        # Execute background evaluations concurrently
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             futures = [executor.submit(score_level, lvl, data) for lvl, data in rag_levels.items()]
             
@@ -302,17 +300,16 @@ def run_agent(action, payload=None):
                 "company": job.get("CompanyName", "Unknown"),
                 "url": job.get("JobLink_or_ID", ""),
                 "score": score_dict,
-                "job_data": job # Store the job data for the justification step
+                "job_data": job 
             })
             
         all_scored.sort(key=lambda x: x["score"].get("total_score", 0), reverse=True)
         final_results = all_scored[:10]
         
-        # We pass the specific job dictionary directly into get_justification
         for i, res in enumerate(final_results):
             res["job_index"] = i + 1
             res["advisor_insight"] = get_justification(res["score"], res["job_data"])
-            del res["job_data"] # Clean up output
+            del res["job_data"] 
 
         return {"status": "success", "message": system_msg, "results": final_results}
 
@@ -329,13 +326,11 @@ def run_agent(action, payload=None):
         temp_jobs = []
         all_scored_jobs = []
         
-        # Helper function to process a single PDF (allows us to thread this)
         def process_pdf(i, b64_pdf):
             raw_ad_result = _rt.call_tool("cv_parser", "parse_job_ad_pdf", {"pdf_base64": b64_pdf})
             raw_ad = normalize_tool_output(raw_ad_result)
             text_desc = raw_ad.get("raw_text", str(raw_ad))
             
-            # 1. UPDATE THE PROMPT: Force the LLM to extract the Level_of_career natively
             prompt = f"""
             You are an expert HR Data Engineer. Analyze this job description and return STRICT valid JSON.
             [JOB DESCRIPTION]
@@ -348,7 +343,7 @@ def run_agent(action, payload=None):
             try:
                 res = requests.post("http://localhost:11434/api/generate", 
                                     json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json"},
-                                    timeout=15)
+                                    timeout=45)
                 ad_data = json.loads(res.json().get("response", "{}"))
             except Exception as e:
                 print(f"LLM Error on PDF {i+1}: {e}", file=sys.stderr)
@@ -364,9 +359,6 @@ def run_agent(action, payload=None):
                 ad_data["Visualization"] = skills_dict.get("Visualization", "")
                 ad_data["Other"] = skills_dict.get("Other", "")
             
-            # 2. DELETE the old hardcoded logic!
-            # The LLM now provides ad_data["Level_of_career"] directly.
-            # Just put a safe fallback in case the LLM hallucinates the key:
             if "Level_of_career" not in ad_data:
                  ad_data["Level_of_career"] = "Entry"
 
@@ -382,7 +374,7 @@ def run_agent(action, payload=None):
                 "temp_ad_data": ad_data
             }
 
-        # Process all PDFs concurrently (Massive speed upgrade)
+        # Process uploaded PDFs concurrently for performance
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             futures = [executor.submit(process_pdf, i, b64) for i, b64 in enumerate(job_ads_b64)]
             
@@ -394,22 +386,17 @@ def run_agent(action, payload=None):
                 except Exception as e:
                     print(f"Threading error: {e}", file=sys.stderr)
 
-        # Re-sort to maintain the order the user uploaded them in
         all_scored_jobs.sort(key=lambda x: x["job_index"])
-        
         pd.DataFrame(temp_jobs).to_csv("temp.csv", index=False)
             
         return {"status": "success", "results": all_scored_jobs}
-    
-
 
     # ----------------------------------------------------
-    # NEW: AI CV ADVISOR (SIDEBAR)
+    # AI CV ADVISOR (SIDEBAR)
     # ----------------------------------------------------
     if action == "cv_advisor":
         cv_data = payload.get("cv_data")
         
-        # Load courses so the AI knows what to recommend
         all_courses = load_rag_json("rag_course.json") or []
         aws_courses = [c for c in all_courses if str(c.get("provider", "")).upper() == "AWS"]
         
@@ -434,7 +421,6 @@ def run_agent(action, payload=None):
         """
         
         try:
-            # We use a 20-second timeout here as generating advice takes a bit more thought
             res = requests.post("http://localhost:11434/api/generate", 
                                 json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json"},
                                 timeout=20)
