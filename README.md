@@ -30,3 +30,69 @@ Before you begin, ensure you have the following installed:
 You must pull the specific LLM model used in this application. Open your terminal and run:
 ```bash
 ollama run qwen3:0.6B
+```
+
+🛠️ Installation & Setup
+1. Clone the repository:
+```bash
+git clone [https://github.com/yourusername/ai-career-agent.git](https://github.com/yourusername/ai-career-agent.git)
+cd ai-career-agent
+```
+
+2. Set up a virtual environment (Recommended):
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Project Structure Configuration:
+Ensure your files are organized exactly like this for the MCP Orchestrator to find the local servers and RAG data:
+```Plaintext
+ai-career-agent/
+│
+├── streamlit_app_v7.py       # Main Streamlit frontend
+├── orchestrator_v4.py        # Brain/Routing logic
+├── requirements.txt
+├── analysised_job_list.csv   # Required for Option 2 (Offline Database)
+│
+├── rag/                      # RAG JSON files
+│   ├── rag_course.json
+│   ├── rag_level_summary.json
+│   └── rag_company_profiles.json
+│
+└── tools/                    # MCP Local Servers
+    ├── cv_parser/
+    │   └── server.py         # (Your server(cv_parser).py)
+    ├── fit_score/
+    │   └── server.py         # (Your server(fit_score).py)
+    └── job_scraper/
+        └── server.py         # (Your server(job_scraper).py)
+```
+
+💻 Usage
+Start the application by running the Streamlit app:
+```bash
+streamlit run streamlit_app_v7.py
+```
+
+Upload your CV: Use the sidebar to upload a PDF of your resume. Wait for the AI to parse it and generate your readiness scores.
+
+Get Advice: Click "Get AI CV Advice" in the sidebar for personalized upskilling tips.
+
+Choose a Matching Mode:
+
+Option 1: Search for live jobs via keyword.
+
+Option 2: Evaluate against the local master database.
+
+Option 3: Upload up to 5 PDF job descriptions for targeted scoring.
+
+⚠️ Known Limitations
+The application relies heavily on a local LLM. Depending on your hardware, processing PDFs and generating justifications may take 15-30 seconds.
+
+The job_scraper functionality requires an active internet connection and may be subject to rate-limiting depending on the target job board.
