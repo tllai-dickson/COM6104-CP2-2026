@@ -16,7 +16,7 @@ LOCAL_LLM_MODEL = "qwen3:0.6B"
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
 
 def load_rag_skills(level: str) -> dict:
-    """Safely loads the RAG skills JSON file."""
+    """Safely loads the required career level skills from the RAG directory."""
     base_dir = Path(__file__).resolve().parent.parent.parent
     rag_file = base_dir / "rag" / "rag_level_summary.json"
     
@@ -36,7 +36,7 @@ def load_rag_skills(level: str) -> dict:
     return {}
 
 def load_rag_courses() -> list:
-    """Safely loads the recognized certifications from RAG."""
+    """Loads recognized industry certifications from RAG."""
     base_dir = Path(__file__).resolve().parent.parent.parent
     rag_file = base_dir / "rag" / "rag_course.json"
     
@@ -50,7 +50,7 @@ def load_rag_courses() -> list:
     return []
 
 def check_academic_relevance_llm(title, description):
-    """Uses LLM to double-check if a Research/Teaching Assistant role is highly technical."""
+    """Uses LLM to verify if a Research/Teaching Assistant role contains applied technical engineering."""
     prompt = f"""
     Analyze this academic role. 
     Does it involve heavy, hands-on technical work in AI, Data Science, or Software Engineering (e.g., building deep learning models, writing production code, advanced data pipelines)?
@@ -63,7 +63,7 @@ def check_academic_relevance_llm(title, description):
     Set it to true if it is heavy engineering/data science. Set it to false if it is standard academic/admin work. Set it to false if it is overlapping with candidant higher-education period.
     """
     
-    payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json"}
+    payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json","options": {"temperature": 0.0}}
     
     try:
         res = requests.post(OLLAMA_API_URL, json=payload, timeout=15)
@@ -73,11 +73,10 @@ def check_academic_relevance_llm(title, description):
         return bool(data.get("is_heavy_tech", False))
     except Exception as e:
         print(f"LLM Academic Eval Error: {e}", file=sys.stderr)
-        return False # Safely default to discounting if LLM fails
+        return False 
 
 def evaluate_qual_and_bonus_llm(cv_edu, cv_exp, job_role, company_name, matched_certs):
-    """Uses local LLM to evaluate Qualifications and Industry Bonuses."""
-    
+    """Uses local LLM to evaluate academic qualifications and calculate industry alignment bonuses."""
     cert_text = ", ".join(matched_certs) if matched_certs else "None"
     
     prompt = f"""
@@ -113,7 +112,7 @@ def evaluate_qual_and_bonus_llm(cv_edu, cv_exp, job_role, company_name, matched_
     }}
     """
     
-    payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json"}
+    payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json","options": {"temperature": 0.0}}
     
     try:
         res = requests.post(OLLAMA_API_URL, json=payload, timeout=15)
@@ -173,7 +172,6 @@ def compute_fit_score(cv: dict, job: dict, company_profile: dict = None) -> dict
         
         title_desc = (str(exp.get("title", "")) + " " + str(exp.get("description", ""))).lower()
         
-        # --- NEW: LLM-VERIFIED STUDENT/INTERN DISCOUNT LOGIC ---
         is_intern_flag = exp.get("is_internship", False)
         
         basic_academic_keywords = ["intern", "internship", "student", "part-time", "trainee"]
@@ -187,12 +185,11 @@ def compute_fit_score(cv: dict, job: dict, company_profile: dict = None) -> dict
         if is_basic_academic:
             apply_discount = True
         elif is_assistant:
-            # It's an RA/TA role. Double-check with LLM!
+            # Verify RA/TA technical depth dynamically
             is_heavy_tech = check_academic_relevance_llm(exp.get("title", ""), exp.get("description", ""))
             if not is_heavy_tech:
-                apply_discount = True # Standard academic work gets the discount
+                apply_discount = True 
                 
-        # Apply the 50% discount if triggered
         if apply_discount:
             yrs = yrs * 0.5 
             
@@ -211,7 +208,7 @@ def compute_fit_score(cv: dict, job: dict, company_profile: dict = None) -> dict
         exp_just = f"Total Exp: {total_exp:.1f}y, AI Exp: {ai_exp:.1f}y. Effective = {effective_exp:.1f}y. Req: {required_exp}y. Math: min(({effective_exp:.1f}/{required_exp}) * 50, 50) = {exp_score:.1f}/50"
 
     # ==========================================
-    # 2 & 4. QUALIFICATION (25%) AND BONUSES (Max 15% Total)
+    # 2 & 4. QUALIFICATION (25%) AND BONUSES (Max 15%)
     # ==========================================
     job_role_desc = str(job.get("JobTitle", job.get("job_title", "Unknown Role")))
     
@@ -233,7 +230,7 @@ def compute_fit_score(cv: dict, job: dict, company_profile: dict = None) -> dict
     bonus_just = f"Academic Align: +{bonus_acad}%. Domain Knowledge: +{bonus_dom}%. {cert_str}."
 
     # ==========================================
-    # 3. CORE SKILLS SCORING (25%) - RAG INTEGRATED
+    # 3. CORE SKILLS SCORING (25%)
     # ==========================================
     cv_skills_lower = json.dumps(cv.get("skills", "")).lower()
     job_level = job.get("Level_of_career", "Entry")
