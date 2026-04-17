@@ -59,28 +59,35 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Helper function to display job results
-def display_results(results):
-    if not results:
-        st.info("No matching jobs found.")
+# Helper function to display job results (FIXED TO MATCH ORCHESTRATOR SCHEMA)
+def display_results(results_list):
+    """Cleanly displays the scored job results with AI recommendations."""
+    if not results_list:
+        st.warning("No jobs found matching your criteria.")
         return
         
-    for job in results:
-        with st.expander(f"💼 {job.get('title', 'Unknown')} at {job.get('company', 'Unknown')} — FIT: {job.get('total_score', 0)}%"):
-            # Advisor Insight Section
-            advisor = job.get("advisor_insight", {})
-            st.info(f"**💡 AI Advisor Insight:**\n\n*Targeted Course:* {advisor.get('course', 'N/A')}\n\n*Interview Strategy:* {advisor.get('interview_tip', 'N/A')}")
+    for res in results_list:
+        score_data = res.get("score", {})
+        total_score = score_data.get("total_score", 0)
+        
+        with st.expander(f"💼 Top {res.get('job_index', '*')}: {res.get('job_title', 'Unknown')} @ {res.get('company', 'Unknown')} — FIT: {total_score}%", expanded=(res.get('job_index')==1)):
+            if res.get('url'):
+                st.markdown(f"🔗 **[View Original Job Posting]({res.get('url')})**")
             
-            # Metrics Columns
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Experience", f"{job.get('experience_score', 0)}/50")
-            m2.metric("Education", f"{job.get('education_score', 0)}/25")
-            m3.metric("Skills", f"{job.get('skills_score', 0)}/25")
-            m4.metric("Bonus", f"+{job.get('bonus_score', 0)}")
+            # Advisor insight is a string from the LLM
+            st.info(f"**🧠 Career Advisor Insight:**\n\n{res.get('advisor_insight', 'No insight provided.')}")
             
-            # Reasoning JSON
-            if st.button("View AI Reasoning JSON", key=f"btn_{job.get('id', 'x')}"):
-                st.json(job)
+            # Show Score Breakdown mapped to correct keys
+            st.markdown("**📊 Scoring Details**")
+            cols = st.columns(4)
+            breakdown = score_data.get('breakdown', {})
+            cols[0].metric("Experience", f"{breakdown.get('experience_score_raw', 0)} / 50")
+            cols[1].metric("Education", f"{breakdown.get('qualification_score_raw', 0)} / 25")
+            cols[2].metric("Skills", f"{breakdown.get('skill_score_raw', 0)} / 25")
+            cols[3].metric("Bonuses", f"+{breakdown.get('bonuses', 0)} pts")
+            
+            with st.popover("View Full AI Reasoning JSON"):
+                st.json(score_data)
 
 # ==========================================
 # ⚡ CYBER ENGINE ROOM
@@ -105,6 +112,7 @@ with st.container():
                 st.session_state.cv_data = run_agent("process_cv", b64_cv)
                 st.session_state.level_scores = run_agent("evaluate_levels", {"cv_data": st.session_state.cv_data})
             st.success("✅ ANALYSIS COMPLETE")
+            
         if "cv_data" in st.session_state:
             with st.expander("🔍 Preview Parsed CV"):
                 st.json(st.session_state.cv_data)
@@ -139,8 +147,11 @@ with st.container():
 
     with col_advisor:
         if st.button("💡 Get AI Advice", use_container_width=True):
-            with st.spinner("Analyzing your profile for improvements..."):
-                st.session_state.cv_advice = run_agent("cv_advisor", {"cv_data": st.session_state.cv_data})
+            if "cv_data" not in st.session_state:
+                 st.warning("⚠️ Please complete Step 1: Profile Initiation first.")
+            else:
+                with st.spinner("Analyzing your profile for improvements..."):
+                    st.session_state.cv_advice = run_agent("cv_advisor", {"cv_data": st.session_state.cv_data})
         
         # Display the Advice if it exists in session state
         if "cv_advice" in st.session_state:
@@ -167,6 +178,8 @@ with st.container():
                     st.markdown("**📝 Resume Action Plan:**")
                     for act in advice.get("resume_action_points", []):
                         st.caption(f"- {act}")
+        elif "cv_data" in st.session_state:
+            st.info("Click 'Get AI Advice' to generate your personalized action plan.")
         else:
             st.warning("Uplink required.")
 
@@ -197,7 +210,7 @@ with tab1:
         
     if st.button("▶️ Run Live Search & Score", type="primary"):
         if "cv_data" not in st.session_state:
-            st.error("⚠️ Please upload and process your CV in the sidebar first.")
+            st.error("⚠️ Please upload and process your CV in Step 1 first.")
         elif not keyword:
             st.warning("Please enter a search keyword.")
         else:
@@ -224,7 +237,7 @@ with tab2:
     
     if st.button("📊 Evaluate Local Database", type="primary"):
         if "cv_data" not in st.session_state:
-            st.error("⚠️ Please upload and process your CV in the sidebar first.")
+            st.error("⚠️ Please upload and process your CV in Step 1 first.")
         else:
             with st.spinner("Filtering database and calculating fit scores..."):
                 res = run_agent("option_2_pipeline", {
@@ -247,7 +260,7 @@ with tab3:
     
     if st.button("📁 Evaluate Uploaded PDFs", type="primary"):
         if "cv_data" not in st.session_state:
-            st.error("⚠️ Please upload and process your CV in the sidebar first.")
+            st.error("⚠️ Please upload and process your CV in Step 1 first.")
         elif not job_pdfs:
             st.warning("Please upload at least one PDF job ad.")
         elif len(job_pdfs) > 5:
@@ -267,5 +280,3 @@ with tab3:
             else:
                 st.success("✅ PDF Evaluation Complete! Results saved to temp.csv.")
                 display_results(res.get("results", []))
-
-                
