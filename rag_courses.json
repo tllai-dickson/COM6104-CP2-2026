@@ -1,0 +1,611 @@
+[
+  {
+    "course_name": "AWS Certified Cloud Practitioner",
+    "provider": "AWS",
+    "target_skills": [
+      "Cloud Concepts",
+      "Security",
+      "Technology",
+      "Billing and Pricing"
+    ],
+    "level": "Foundation",
+    "url": "https://aws.amazon.com/certification/certified-cloud-practitioner/",
+    "score": 1
+  },
+  {
+    "course_name": "AWS Certified AI Practitioner",
+    "provider": "AWS",
+    "target_skills": [
+      "AI/ML Concepts",
+      "Generative AI",
+      "Cloud Security",
+      "Ethics"
+    ],
+    "level": "Foundation",
+    "url": "https://aws.amazon.com/certification/certified-ai-practitioner/",
+    "score": 1
+  },
+  {
+    "course_name": "Cloud Digital Leader",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "Digital Transformation",
+      "Data and AI",
+      "Infrastructure and Application Modernization",
+      "Cloud Security"
+    ],
+    "level": "Foundation",
+    "url": "https://cloud.google.com/learn/certification/cloud-digital-leader",
+    "score": 2
+  },
+  {
+    "course_name": "AWS Certified Solutions Architect \u2013 Associate",
+    "provider": "AWS",
+    "target_skills": [
+      "Compute",
+      "Networking",
+      "Storage",
+      "Database",
+      "Security"
+    ],
+    "level": "Associate",
+    "url": "https://aws.amazon.com/certification/certified-solutions-architect-associate/",
+    "score": 2
+  },
+  {
+    "course_name": "AWS Certified Developer \u2013 Associate",
+    "provider": "AWS",
+    "target_skills": [
+      "Application Development",
+      "Security",
+      "Deployment",
+      "Troubleshooting"
+    ],
+    "level": "Associate",
+    "url": "https://aws.amazon.com/certification/certified-developer-associate/",
+    "score": 2
+  },
+  {
+    "course_name": "AWS Certified CloudOps Engineer \u2013 Associate",
+    "provider": "AWS",
+    "target_skills": [
+      "Deployment",
+      "Monitoring",
+      "Troubleshooting",
+      "Security",
+      "Compliance"
+    ],
+    "level": "Associate",
+    "url": "https://aws.amazon.com/certification/certified-sysops-admin-associate/",
+    "score": 2
+  },
+  {
+    "course_name": "AWS Certified Data Engineer \u2013 Associate",
+    "provider": "AWS",
+    "target_skills": [
+      "Data Ingestion",
+      "Data Transformation",
+      "Data Store Management",
+      "Data Security"
+    ],
+    "level": "Associate",
+    "url": "https://aws.amazon.com/certification/certified-data-engineer-associate/",
+    "score": 2
+  },
+  {
+    "course_name": "AWS Certified Machine Learning Engineer \u2013 Associate",
+    "provider": "AWS",
+    "target_skills": [
+      "Machine Learning",
+      "Data Engineering",
+      "Model Deployment",
+      "Monitoring"
+    ],
+    "level": "Associate",
+    "url": "https://aws.amazon.com/certification/certified-machine-learning-engineer-associate/",
+    "score": 2
+  },
+  {
+    "course_name": "Associate Cloud Engineer",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "Cloud Project Management",
+      "Compute Resources",
+      "Storage",
+      "Networking",
+      "Security"
+    ],
+    "level": "Associate",
+    "url": "https://cloud.google.com/learn/certification/cloud-engineer",
+    "score": 2
+  },
+  {
+    "course_name": "Cloud Developer (Associate)",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "Cloud Native Applications",
+      "Developer Tools",
+      "Application Deployment",
+      "Performance Monitoring"
+    ],
+    "level": "Associate",
+    "url": "https://cloud.google.com/learn/certification/cloud-developer",
+    "score": 2
+  },
+  {
+    "course_name": "Cloud DevOps Engineer (Associate)",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "CI/CD",
+      "Site Reliability Engineering",
+      "Incident Management",
+      "Monitoring"
+    ],
+    "level": "Associate",
+    "url": "https://cloud.google.com/learn/certification/cloud-devops-engineer",
+    "score": 2
+  },
+  {
+    "course_name": "Microsoft Certified: Azure Administrator Associate",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Azure Identities",
+      "Storage",
+      "Compute",
+      "Virtual Networking",
+      "Monitoring"
+    ],
+    "level": "Associate",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-administrator/",
+    "score": 2
+  },
+  {
+    "course_name": "Microsoft Certified: Power Platform Developer Associate",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Power Apps",
+      "Power Automate",
+      "Power BI",
+      "Dataverse",
+      "Custom Connectors"
+    ],
+    "level": "Associate",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/power-platform-developer/",
+    "score": 2
+  },
+  {
+    "course_name": "Microsoft Certified: Azure AI Engineer Associate",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Cognitive Services",
+      "Knowledge Mining",
+      "Generative AI",
+      "NLP",
+      "Computer Vision"
+    ],
+    "level": "Associate",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-engineer/",
+    "score": 2
+  },
+  {
+    "course_name": "Microsoft Certified: Azure Data Scientist Associate",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Machine Learning",
+      "Data Preparation",
+      "Model Training",
+      "Model Deployment",
+      "MLOps"
+    ],
+    "level": "Associate",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-data-scientist/",
+    "score": 2
+  },
+  {
+    "course_name": "Microsoft Certified: Azure Database Administrator Associate",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "SQL Server",
+      "Azure SQL Database",
+      "Performance Tuning",
+      "High Availability",
+      "Database Security"
+    ],
+    "level": "Associate",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-database-administrator-associate/",
+    "score": 2
+  },
+  {
+    "course_name": "Microsoft Certified: Azure Network Engineer Associate",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Virtual Networks",
+      "Routing",
+      "Load Balancing",
+      "Network Security",
+      "Private Link"
+    ],
+    "level": "Associate",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-network-engineer-associate/",
+    "score": 2
+  },
+  {
+    "course_name": "Microsoft Certified: Power BI Data Analyst Associate",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Data Preparation",
+      "Data Modeling",
+      "Data Visualization",
+      "Data Analysis",
+      "Power BI"
+    ],
+    "level": "Associate",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/data-analyst-associate/",
+    "score": 3
+  },
+  {
+    "course_name": "AWS Certified Solutions Architect \u2013 Professional",
+    "provider": "AWS",
+    "target_skills": [
+      "Complex Solutions",
+      "Migration",
+      "Cost Optimization",
+      "Continuous Delivery",
+      "Enterprise Security"
+    ],
+    "level": "Professional",
+    "url": "https://aws.amazon.com/certification/certified-solutions-architect-professional/",
+    "score": 3
+  },
+  {
+    "course_name": "AWS Certified DevOps Engineer \u2013 Professional",
+    "provider": "AWS",
+    "target_skills": [
+      "CI/CD",
+      "Automation",
+      "Infrastructure as Code",
+      "Monitoring",
+      "Logging",
+      "Incident Response"
+    ],
+    "level": "Professional",
+    "url": "https://aws.amazon.com/certification/certified-devops-engineer-professional/",
+    "score": 3
+  },
+  {
+    "course_name": "AWS Certified Generative AI Developer \u2013 Professional",
+    "provider": "AWS",
+    "target_skills": [
+      "Generative AI",
+      "LLMs",
+      "Prompt Engineering",
+      "Foundation Models",
+      "AI Application Integration"
+    ],
+    "level": "Professional",
+    "url": "https://aws.amazon.com/certification/",
+    "score": 3
+  },
+  {
+    "course_name": "Professional Cloud Architect",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "Cloud Architecture",
+      "Migration",
+      "Security",
+      "Compliance",
+      "Operations"
+    ],
+    "level": "Professional",
+    "url": "https://cloud.google.com/learn/certification/cloud-architect",
+    "score": 3
+  },
+  {
+    "course_name": "Professional Cloud Developer",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "Cloud-Native Architecture",
+      "Managed Services",
+      "Application Deployment",
+      "Performance Optimization"
+    ],
+    "level": "Professional",
+    "url": "https://cloud.google.com/learn/certification/cloud-developer",
+    "score": 3
+  },
+  {
+    "course_name": "Professional Cloud DevOps Engineer",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "SRE",
+      "CI/CD Pipelines",
+      "Infrastructure as Code",
+      "Service Monitoring"
+    ],
+    "level": "Professional",
+    "url": "https://cloud.google.com/learn/certification/cloud-devops-engineer",
+    "score": 3
+  },
+  {
+    "course_name": "Professional Cloud Security Engineer",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "IAM",
+      "Network Security",
+      "Data Protection",
+      "Compliance",
+      "Security Operations"
+    ],
+    "level": "Professional",
+    "url": "https://cloud.google.com/learn/certification/cloud-security-engineer",
+    "score": 3
+  },
+  {
+    "course_name": "Professional Cloud Network Engineer",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "VPC",
+      "Hybrid Connectivity",
+      "Network Security",
+      "Network Routing"
+    ],
+    "level": "Professional",
+    "url": "https://cloud.google.com/learn/certification/cloud-network-engineer",
+    "score": 3
+  },
+  {
+    "course_name": "Professional Data Engineer",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "Data Processing Systems",
+      "Data Pipelines",
+      "Machine Learning Models",
+      "Data Quality"
+    ],
+    "level": "Professional",
+    "url": "https://cloud.google.com/learn/certification/data-engineer",
+    "score": 3
+  },
+  {
+    "course_name": "Professional Machine Learning Engineer",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "ML Problem Framing",
+      "ML Architecture",
+      "Model Development",
+      "MLOps"
+    ],
+    "level": "Professional",
+    "url": "https://cloud.google.com/learn/certification/machine-learning-engineer",
+    "score": 3
+  },
+  {
+    "course_name": "Professional Collaboration Engineer",
+    "provider": "Google Cloud",
+    "target_skills": [
+      "Google Workspace",
+      "Identity Management",
+      "Mail Routing",
+      "Collaboration Tools"
+    ],
+    "level": "Professional",
+    "url": "https://cloud.google.com/learn/certification/google-workspace-administrator",
+    "score": 3
+  },
+  {
+    "course_name": "Microsoft Certified: Azure Solutions Architect Expert",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Azure Infrastructure",
+      "Data Storage",
+      "Business Continuity",
+      "Infrastructure as Code"
+    ],
+    "level": "Professional",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-solutions-architect/",
+    "score": 3
+  },
+  {
+    "course_name": "Microsoft Certified: Power Platform Solutions Architect Expert",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Solution Architecture",
+      "Power Platform",
+      "Dataverse",
+      "Integration",
+      "Security"
+    ],
+    "level": "Professional",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/power-platform-solution-architect/",
+    "score": 3
+  },
+  {
+    "course_name": "Microsoft Certified: DevOps Engineer Expert",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "CI/CD",
+      "Version Control",
+      "Infrastructure as Code",
+      "Continuous Monitoring",
+      "DevSecOps"
+    ],
+    "level": "Professional",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/devops-engineer/",
+    "score": 3
+  },
+  {
+    "course_name": "AWS Certified Security \u2013 Specialty",
+    "provider": "AWS",
+    "target_skills": [
+      "Incident Response",
+      "Logging and Monitoring",
+      "Infrastructure Security",
+      "Identity and Access Management",
+      "Data Protection"
+    ],
+    "level": "Specialty",
+    "url": "https://aws.amazon.com/certification/certified-security-specialty/",
+    "score": 3
+  },
+  {
+    "course_name": "AWS Certified Advanced Networking \u2013 Specialty",
+    "provider": "AWS",
+    "target_skills": [
+      "Network Design",
+      "Network Implementation",
+      "Network Management",
+      "Network Security"
+    ],
+    "level": "Specialty",
+    "url": "https://aws.amazon.com/certification/certified-advanced-networking-specialty/",
+    "score": 3
+  },
+  {
+    "course_name": "AWS Certified Machine Learning \u2013 Specialty",
+    "provider": "AWS",
+    "target_skills": [
+      "Data Engineering",
+      "Exploratory Data Analysis",
+      "Modeling",
+      "Machine Learning Implementation and Operations"
+    ],
+    "level": "Specialty",
+    "url": "https://aws.amazon.com/certification/certified-machine-learning-specialty/",
+    "score": 3
+  },
+  {
+    "course_name": "Microsoft Certified: Azure Virtual Desktop Specialty",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Azure Virtual Desktop",
+      "Virtualization",
+      "Access Management",
+      "Desktop Image Management"
+    ],
+    "level": "Specialty",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-virtual-desktop-specialty/",
+    "score": 3
+  },
+  {
+    "course_name": "Microsoft Certified: Azure Cosmos DB Developer Specialty",
+    "provider": "Microsoft Azure",
+    "target_skills": [
+      "Azure Cosmos DB",
+      "NoSQL",
+      "Data Modeling",
+      "Querying",
+      "Performance Optimization"
+    ],
+    "level": "Specialty",
+    "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-cosmos-db-developer-specialty/",
+    "score": 1
+  },
+  {
+    "course_name": "Huawei Cloud Certified - Cloud Migration Competency (Advanced)",
+    "provider": "Huawei Cloud",
+    "target_skills": [
+      "Cloud Migration",
+      "Huawei Cloud Services",
+      "Migration Tools",
+      "Architecture Design"
+    ],
+    "level": "General",
+    "url": "https://edu.huaweicloud.com/intl/en-us/certification",
+    "score": 1
+  },
+  {
+    "course_name": "Huawei Cloud Service Partner / Consulting Partners / Cloud Solution Provider",
+    "provider": "Huawei Cloud",
+    "target_skills": [
+      "Cloud Consulting",
+      "Cloud Solutions",
+      "Partner Network",
+      "Cloud Services"
+    ],
+    "level": "General",
+    "url": "https://www.huaweicloud.com/intl/en-us/partners/",
+    "score": 1
+  },
+  {
+    "course_name": "OutSystems Partner",
+    "provider": "OutSystems",
+    "target_skills": [
+      "Low-Code Development",
+      "OutSystems Platform",
+      "Enterprise Applications",
+      "Digital Transformation"
+    ],
+    "level": "General",
+    "url": "https://www.outsystems.com/partners/",
+    "score": 1
+  },
+  {
+    "course_name": "CISA \u2013 Certified Information Systems Auditor (ISACA)",
+    "provider": "Security/Compliance",
+    "target_skills": [
+      "Information Systems Auditing",
+      "IT Governance",
+      "Information Asset Protection",
+      "IT Management"
+    ],
+    "level": "General",
+    "url": "https://www.isaca.org/credentialing/cisa",
+    "score": 1
+  },
+  {
+    "course_name": "CISM \u2013 Certified Information Security Manager (ISACA)",
+    "provider": "Security/Compliance",
+    "target_skills": [
+      "Information Security Governance",
+      "Information Risk Management",
+      "Information Security Program Development",
+      "Incident Management"
+    ],
+    "level": "General",
+    "url": "https://www.isaca.org/credentialing/cism",
+    "score": 1
+  },
+  {
+    "course_name": "CCSP \u2013 Certified Cloud Security Professional ((ISC)\u00b2)",
+    "provider": "Security/Compliance",
+    "target_skills": [
+      "Cloud Concepts",
+      "Cloud Data Security",
+      "Cloud Platform Security",
+      "Cloud Application Security",
+      "Operations",
+      "Legal and Compliance"
+    ],
+    "level": "General",
+    "url": "https://www.isc2.org/Certifications/CCSP",
+    "score": 1
+  },
+  {
+    "course_name": "ISO/IEC 27001:2013 Certified (Information Security Management System)",
+    "provider": "Security/Compliance",
+    "target_skills": [
+      "ISMS",
+      "Information Security",
+      "Risk Management",
+      "Compliance",
+      "Continuous Improvement"
+    ],
+    "level": "General",
+    "url": "https://www.iso.org/isoiec-27001-information-security.html",
+    "score": 1
+  },
+  {
+    "course_name": "ISO 27001 Registered",
+    "provider": "Security/Compliance",
+    "target_skills": [
+      "ISMS",
+      "Information Security",
+      "Risk Assessment",
+      "Auditing",
+      "Compliance"
+    ],
+    "level": "General",
+    "url": "https://www.iso.org/isoiec-27001-information-security.html",
+    "score": 3
+  }
+]

@@ -1,0 +1,845 @@
+{
+  "the_bank_of_east_asia_limited": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "industrial_and_commercial_bank_of_china_asia_limited": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "chiyu_banking_corporation_limited": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Medium"
+  },
+  "empf_platform_company_limited": {
+    "domain": [
+      "E-Commerce",
+      "Retail Solutions"
+    ],
+    "industry": "E-Commerce",
+    "size": "Medium"
+  },
+  "city_university_of_hong_kong": {
+    "domain": [
+      "Higher Education",
+      "Research"
+    ],
+    "industry": "Education",
+    "size": "Large"
+  },
+  "ai_pacific_consultants": {
+    "domain": [
+      "Recruitment",
+      "Headhunting"
+    ],
+    "industry": "Human Resources Consulting",
+    "size": "Small"
+  },
+  "lingnan_university": {
+    "domain": [
+      "Higher Education",
+      "Research"
+    ],
+    "industry": "Education",
+    "size": "Large"
+  },
+  "cryptocom": {
+    "domain": [
+      "Cryptocurrency Exchange",
+      "Web3"
+    ],
+    "industry": "FinTech",
+    "size": "Large"
+  },
+  "shinewing_hk_cpa_limited": {
+    "domain": [
+      "Accounting",
+      "Audit",
+      "Advisory"
+    ],
+    "industry": "Professional Services",
+    "size": "Medium"
+  },
+  "disney": {
+    "domain": [
+      "Media",
+      "Entertainment"
+    ],
+    "industry": "Entertainment",
+    "size": "Large"
+  },
+  "wpp_media": {
+    "domain": [
+      "Advertising",
+      "Public Relations"
+    ],
+    "industry": "Marketing and Advertising",
+    "size": "Large"
+  },
+  "sunnyvision_limited": {
+    "domain": [
+      "Internet Service Provider",
+      "Web Hosting"
+    ],
+    "industry": "Information Technology",
+    "size": "Small"
+  },
+  "hsbc_global_services_limited": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "lululemon": {
+    "domain": [
+      "Athletic Apparel",
+      "Retail"
+    ],
+    "industry": "Retail",
+    "size": "Large"
+  },
+  "legislative_council_secretariat": {
+    "domain": [
+      "Government Administration"
+    ],
+    "industry": "Public Sector",
+    "size": "Medium"
+  },
+  "binance": {
+    "domain": [
+      "Cryptocurrency Exchange",
+      "Blockchain"
+    ],
+    "industry": "FinTech",
+    "size": "Large"
+  },
+  "alvarez_and_marsal": {
+    "domain": [
+      "Management Consulting",
+      "Restructuring"
+    ],
+    "industry": "Consulting",
+    "size": "Large"
+  },
+  "sap": {
+    "domain": [
+      "Enterprise Software Solutions"
+    ],
+    "industry": "Technology",
+    "size": "Large"
+  },
+  "sing_tao_news_corporation_limited": {
+    "domain": [
+      "Media",
+      "Publishing"
+    ],
+    "industry": "Media",
+    "size": "Large"
+  },
+  "zurich_insurance": {
+    "domain": [
+      "Insurance",
+      "Risk Management"
+    ],
+    "industry": "Insurance",
+    "size": "Large"
+  },
+  "senior_citizen_home_safety_association": {
+    "domain": [
+      "Elderly Care",
+      "Community Services"
+    ],
+    "industry": "Non-Profit",
+    "size": "Medium"
+  },
+  "eddid_securities_and_futures_limited": {
+    "domain": [
+      "Securities Brokerage",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Medium"
+  },
+  "the_hang_seng_university_of_hong_kong": {
+    "domain": [
+      "Higher Education",
+      "Research"
+    ],
+    "industry": "Education",
+    "size": "Medium"
+  },
+  "hong_kong_air_cargo_terminals_limited": {
+    "domain": [
+      "Air Cargo",
+      "Logistics"
+    ],
+    "industry": "Logistics",
+    "size": "Large"
+  },
+  "west_kowloon_cultural_district_authority": {
+    "domain": [
+      "Arts",
+      "Cultural Development"
+    ],
+    "industry": "Public Sector / Arts",
+    "size": "Medium"
+  },
+  "grg_banking_equipment_hk_co_ltd": {
+    "domain": [
+      "ATM",
+      "Financial Equipment Solutions"
+    ],
+    "industry": "Hardware Technology",
+    "size": "Large"
+  },
+  "civil_service_bureau": {
+    "domain": [
+      "Government Human Resources Policy"
+    ],
+    "industry": "Government",
+    "size": "Large"
+  },
+  "kln_logistics_hong_kong_limited": {
+    "domain": [
+      "Supply Chain",
+      "Freight Forwarding"
+    ],
+    "industry": "Logistics",
+    "size": "Large"
+  },
+  "manulife": {
+    "domain": [
+      "Life Insurance",
+      "Wealth Management"
+    ],
+    "industry": "Insurance and Financial Services",
+    "size": "Large"
+  },
+  "phillip_securities_group": {
+    "domain": [
+      "Wealth Management",
+      "Securities"
+    ],
+    "industry": "Finance",
+    "size": "Medium"
+  },
+  "chong_hing_bank": {
+    "domain": [
+      "Retail Banking",
+      "Commercial Banking"
+    ],
+    "industry": "Finance",
+    "size": "Medium"
+  },
+  "dah_sing_financial_group": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Medium"
+  },
+  "uob_kay_hian_hong_kong_limited": {
+    "domain": [
+      "Securities Broking",
+      "Investment Broking"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "ubs": {
+    "domain": [
+      "Investment Banking",
+      "Wealth Management"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "hong_kong_cyberport_management_co_ltd": {
+    "domain": [
+      "Tech Hub",
+      "Startup Incubation"
+    ],
+    "industry": "Real Estate / Technology",
+    "size": "Medium"
+  },
+  "deloitte": {
+    "domain": [
+      "Audit",
+      "Consulting",
+      "Financial Advisory"
+    ],
+    "industry": "Professional Services",
+    "size": "Large"
+  },
+  "welab": {
+    "domain": [
+      "Digital Banking",
+      "Consumer Lending"
+    ],
+    "industry": "FinTech",
+    "size": "Medium"
+  },
+  "pccw_global": {
+    "domain": [
+      "International Telecommunications"
+    ],
+    "industry": "Telecommunications",
+    "size": "Large"
+  },
+  "transunion": {
+    "domain": [
+      "Credit Reporting",
+      "Information Services"
+    ],
+    "industry": "Financial Data",
+    "size": "Large"
+  },
+  "cargo_services_far_east_limited": {
+    "domain": [
+      "Supply Chain Management",
+      "Logistics"
+    ],
+    "industry": "Logistics",
+    "size": "Large"
+  },
+  "google": {
+    "domain": [
+      "Search",
+      "Cloud Computing",
+      "AI"
+    ],
+    "industry": "Technology",
+    "size": "Large"
+  },
+  "the_bank_of_new_york_mellon_corporation": {
+    "domain": [
+      "Corporate Banking",
+      "Investment Banking"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "lalamove": {
+    "domain": [
+      "On-Demand Delivery",
+      "Logistics"
+    ],
+    "industry": "Logistics Technology",
+    "size": "Large"
+  },
+  "aia": {
+    "domain": [
+      "Life Insurance",
+      "Financial Services"
+    ],
+    "industry": "Insurance",
+    "size": "Large"
+  },
+  "swire_properties": {
+    "domain": [
+      "Real Estate Development",
+      "Investment"
+    ],
+    "industry": "Real Estate",
+    "size": "Large"
+  },
+  "the_hongkong_electric_co_ltd": {
+    "domain": [
+      "Power Generation",
+      "Power Supply"
+    ],
+    "industry": "Utilities",
+    "size": "Large"
+  },
+  "santander_bank": {
+    "domain": [
+      "Retail Banking",
+      "Commercial Banking"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "gleneagles_hong_kong_hospital": {
+    "domain": [
+      "Private Healthcare",
+      "Medical Services"
+    ],
+    "industry": "Healthcare",
+    "size": "Medium"
+  },
+  "lenovo": {
+    "domain": [
+      "Consumer Electronics",
+      "IT Solutions"
+    ],
+    "industry": "Technology",
+    "size": "Large"
+  },
+  "bank_of_china_hong_kong": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "mandatory_provident_fund_schemes_authority": {
+    "domain": [
+      "Retirement Fund Regulation"
+    ],
+    "industry": "Public Sector / Finance",
+    "size": "Medium"
+  },
+  "okx": {
+    "domain": [
+      "Cryptocurrency Exchange",
+      "Web3"
+    ],
+    "industry": "FinTech",
+    "size": "Large"
+  },
+  "johnson_controls": {
+    "domain": [
+      "Smart Building Systems",
+      "HVAC"
+    ],
+    "industry": "Manufacturing / Engineering",
+    "size": "Large"
+  },
+  "axa": {
+    "domain": [
+      "Insurance",
+      "Asset Management"
+    ],
+    "industry": "Insurance",
+    "size": "Large"
+  },
+  "cathay_pacific": {
+    "domain": [
+      "Airlines",
+      "Aviation Services"
+    ],
+    "industry": "Aviation",
+    "size": "Large"
+  },
+  "dhl": {
+    "domain": [
+      "International Shipping",
+      "Courier Delivery"
+    ],
+    "industry": "Logistics",
+    "size": "Large"
+  },
+  "hong_kong_institute_of_certified_public_accountants": {
+    "domain": [
+      "Accounting Professional Standards"
+    ],
+    "industry": "Professional Association",
+    "size": "Medium"
+  },
+  "hong_kong_productivity_council": {
+    "domain": [
+      "Industry Productivity",
+      "Tech Support"
+    ],
+    "industry": "Public Sector / Consulting",
+    "size": "Medium"
+  },
+  "bloomberg": {
+    "domain": [
+      "Financial Data",
+      "Software",
+      "Media"
+    ],
+    "industry": "Media and Financial Data",
+    "size": "Large"
+  },
+  "shanghai_commercial_bank_ltd": {
+    "domain": [
+      "Commercial Banking"
+    ],
+    "industry": "Finance",
+    "size": "Medium"
+  },
+  "bank_of_singapore": {
+    "domain": [
+      "Private Banking"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "china_construction_bank_asia_corporation_limited": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "construction_industry_council": {
+    "domain": [
+      "Construction Standards",
+      "Training"
+    ],
+    "industry": "Public Sector / Construction",
+    "size": "Medium"
+  },
+  "bt": {
+    "domain": [
+      "Telecommunications",
+      "IT Services"
+    ],
+    "industry": "Telecommunications",
+    "size": "Large"
+  },
+  "cmb_wing_lung_bank_limited": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "citi": {
+    "domain": [
+      "Global Investment Banking",
+      "Retail Banking"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "bank_of_communications_co_ltd_hong_kong_branch": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "hong_kong_monetary_authority": {
+    "domain": [
+      "Central Banking",
+      "Financial Regulation"
+    ],
+    "industry": "Government",
+    "size": "Medium"
+  },
+  "airport_authority_hong_kong": {
+    "domain": [
+      "Airport Operations",
+      "Airport Management"
+    ],
+    "industry": "Aviation / Public Sector",
+    "size": "Large"
+  },
+  "li_and_fung_trading_limited": {
+    "domain": [
+      "Global Supply Chain Management"
+    ],
+    "industry": "Logistics and Trade",
+    "size": "Large"
+  },
+  "hong_kong_aircraft_engineering_company_limited": {
+    "domain": [
+      "Aircraft Maintenance",
+      "Aviation Engineering"
+    ],
+    "industry": "Aviation",
+    "size": "Large"
+  },
+  "ocbc_bank_hong_kong_limited": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "ferrero": {
+    "domain": [
+      "Confectionery Manufacturing"
+    ],
+    "industry": "Food and Beverage",
+    "size": "Large"
+  },
+  "urban_renewal_authority": {
+    "domain": [
+      "Urban Redevelopment",
+      "City Planning"
+    ],
+    "industry": "Public Sector / Real Estate",
+    "size": "Medium"
+  },
+  "hong_kong_science_and_technology_parks_corporation": {
+    "domain": [
+      "Tech Hub",
+      "Startup Incubation"
+    ],
+    "industry": "Real Estate / Technology",
+    "size": "Large"
+  },
+  "airwallex": {
+    "domain": [
+      "Cross-Border Payments",
+      "Financial Platforms"
+    ],
+    "industry": "FinTech",
+    "size": "Medium"
+  },
+  "mandarin_oriental_hotel_group": {
+    "domain": [
+      "Luxury Hotel Management"
+    ],
+    "industry": "Hospitality",
+    "size": "Large"
+  },
+  "amazon_web_services_hong_kong_limited": {
+    "domain": [
+      "Cloud Computing",
+      "AI Services"
+    ],
+    "industry": "Technology",
+    "size": "Large"
+  },
+  "accenture": {
+    "domain": [
+      "IT Services",
+      "Consulting"
+    ],
+    "industry": "Consulting",
+    "size": "Large"
+  },
+  "sun_life": {
+    "domain": [
+      "Life Insurance",
+      "Wealth Management"
+    ],
+    "industry": "Insurance",
+    "size": "Large"
+  },
+  "equinix": {
+    "domain": [
+      "Data Centers",
+      "Internet Connection"
+    ],
+    "industry": "Information Technology",
+    "size": "Large"
+  },
+  "standard_chartered_bank_hong_kong_ltd": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "hong_kong_exchanges_and_clearing_limited": {
+    "domain": [
+      "Financial Markets Operation"
+    ],
+    "industry": "Finance",
+    "size": "Medium"
+  },
+  "state_street": {
+    "domain": [
+      "Financial Services",
+      "Bank Holding"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "thomson_reuters": {
+    "domain": [
+      "Information Services",
+      "Media"
+    ],
+    "industry": "Media and Financial Data",
+    "size": "Large"
+  },
+  "societe_generale": {
+    "domain": [
+      "Investment Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "iqvia": {
+    "domain": [
+      "Health Information Technology",
+      "Clinical Research"
+    ],
+    "industry": "Healthcare Technology",
+    "size": "Large"
+  },
+  "barclays": {
+    "domain": [
+      "Investment Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "pfizer": {
+    "domain": [
+      "Pharmaceuticals",
+      "Biotechnology"
+    ],
+    "industry": "Healthcare",
+    "size": "Large"
+  },
+  "msci": {
+    "domain": [
+      "Investment Decision Support Tools"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "south_china_morning_post": {
+    "domain": [
+      "News Media",
+      "Publishing"
+    ],
+    "industry": "Media",
+    "size": "Medium"
+  },
+  "the_education_university_of_hong_kong": {
+    "domain": [
+      "Higher Education",
+      "Research"
+    ],
+    "industry": "Education",
+    "size": "Medium"
+  },
+  "moodys": {
+    "domain": [
+      "Credit Ratings",
+      "Risk Analysis"
+    ],
+    "industry": "Financial Data",
+    "size": "Large"
+  },
+  "jpmorganchase": {
+    "domain": [
+      "Investment Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "moomoo": {
+    "domain": [
+      "Digital Trading Platform"
+    ],
+    "industry": "FinTech",
+    "size": "Medium"
+  },
+  "chanel": {
+    "domain": [
+      "Luxury Fashion",
+      "Cosmetics"
+    ],
+    "industry": "Retail",
+    "size": "Large"
+  },
+  "blackrock_investments": {
+    "domain": [
+      "Investment Management"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "ey": {
+    "domain": [
+      "Audit",
+      "Consulting",
+      "Financial Advisory"
+    ],
+    "industry": "Professional Services",
+    "size": "Large"
+  },
+  "adidas": {
+    "domain": [
+      "Athletic Apparel",
+      "Footwear"
+    ],
+    "industry": "Retail",
+    "size": "Large"
+  },
+  "goldman_sachs": {
+    "domain": [
+      "Investment Banking",
+      "Securities"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "macquarie_group_limited": {
+    "domain": [
+      "Financial Services",
+      "Investment Banking"
+    ],
+    "industry": "Finance",
+    "size": "Large"
+  },
+  "cbre": {
+    "domain": [
+      "Commercial Real Estate Services"
+    ],
+    "industry": "Real Estate",
+    "size": "Large"
+  },
+  "mongodb": {
+    "domain": [
+      "Database Platforms",
+      "Software"
+    ],
+    "industry": "Technology",
+    "size": "Large"
+  },
+  "smartone": {
+    "domain": [
+      "Mobile Network Operator"
+    ],
+    "industry": "Telecommunications",
+    "size": "Large"
+  },
+  "the_hong_kong_university_of_science_and_technology": {
+    "domain": [
+      "Higher Education",
+      "Research"
+    ],
+    "industry": "Education",
+    "size": "Large"
+  },
+  "as_watson": {
+    "domain": [
+      "Health Retail",
+      "Beauty Retail"
+    ],
+    "industry": "Retail",
+    "size": "Large"
+  },
+  "boston_consulting_group": {
+    "domain": [
+      "Management Consulting"
+    ],
+    "industry": "Consulting",
+    "size": "Large"
+  }
+}

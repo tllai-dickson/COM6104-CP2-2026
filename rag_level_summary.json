@@ -1,0 +1,158 @@
+{
+    "Entry": {
+        "min_experience_years": 2,
+        "typical_titles": [
+            "AI Engineer Trainee",
+            "Junior Data Scientist",
+            "Machine Learning Assistant",
+            "AI Analyst"
+        ],
+        "preferred_education": "AI/IT Degree or equivalent",
+        "summary": "Entry-level AI roles focus on foundational machine learning knowledge, programming basics, and supervised tasks.",
+        "required_techniques": {
+            "Languages": [
+                "Bash", "Css", "Go", "Golang", "Html", "Java", "Javascript", "Js", 
+                "Kotlin", "Php", "Python", "R", "Ruby", "Rust", "Scala", "Sql", 
+                "Swift", "Typescript"
+            ],
+            "Cloud": [
+                "Alibaba Cloud", "Aws", "Azure", "Cloud", "Gcp", "Google Cloud"
+            ],
+            "DevOps": [
+                "Agile", "Ansible", "Ci/Cd", "Continuous Deployment", "Continuous Integration", 
+                "Devops", "Docker", "Git", "Influx", "Kubernetes", "Linux", "Pub/Sub", 
+                "Scrum", "Terraform"
+            ],
+            "Data and Frameworks": [
+                "Angular", "Data Science", "Databricks", "Elasticsearch", "Hadoop", "Kafka", 
+                "Mongodb", "Mysql", "Node.Js", "Nosql", "Numpy", "Pandas", "Postgresql", 
+                "React", "Redis", "Relational Databases", "Snowflake", "Spark", "Spring", "Vue"
+            ],
+            "AI": [
+                "Ai", "Artificial Intelligence", "Computer Vision", "Deep Learning", "Genai", 
+                "Keras", "Llms", "Machine Learning", "Ml", "Nlp", "Openai", "Pytorch", 
+                "Scikit-Learn", "Tensorflow"
+            ],
+            "Visualization": [
+                "Business Intelligence", "D3", "Dashboards", "Grafana", "Matplotlib", 
+                "Powerbi", "Qlik", "Tableau"
+            ],
+            "Others": []
+        }
+    },
+    "Medium": {
+        "min_experience_years": 5,
+        "typical_titles": [
+            "AI Engineer",
+            "Data Scientist",
+            "Machine Learning Engineer",
+            "AI Developer"
+        ],
+        "preferred_education": "AI/IT Degree with applied project experience",
+        "summary": "Medium-level roles require independent development, model training, and deployment in production environments.",
+        "required_techniques": {
+            "Languages": [
+                "Bash", "Css", "Go", "Golang", "Html", "Java", "Javascript", "Js", 
+                "Php", "Python", "R", "Rust", "Scala", "Sql", "Swift", "Typescript"
+            ],
+            "Cloud": [
+                "Aws", "Azure", "Cloud", "Gcp", "Google Cloud"
+            ],
+            "DevOps": [
+                "Agile", "Ansible", "Chef", "Ci/Cd", "Continuous Deployment", "Continuous Integration", 
+                "Devops", "Docker", "Git", "Jenkins", "Kubernetes", "Linux", "Puppet", 
+                "Scrum", "Terraform"
+            ],
+            "Data and Frameworks": [
+                "Angular", "Data Science", "Databricks", "Elasticsearch", "Hadoop", "Kafka", 
+                "Mongodb", "Mysql", "Node.Js", "Nosql", "Numpy", "Pandas", "Postgresql", 
+                "React", "Redis", "Relational Databases", "Snowflake", "Spark", "Spring"
+            ],
+            "AI": [
+                "Ai", "Artificial Intelligence", "Computer Vision", "Deep Learning", "Genai", 
+                "Keras", "Llms", "Machine Learning", "Ml", "Nlp", "Openai", "Pytorch", 
+                "Scikit-Learn", "Tensorflow"
+            ],
+            "Visualization": [
+                "Business Intelligence", "Dashboards", "Powerbi", "Qlik", "Tableau"
+            ],
+            "Others": []
+        }
+    },
+    "Senior": {
+        "min_experience_years": 10,
+        "typical_titles": [
+            "Senior AI Engineer",
+            "Senior Data Scientist",
+            "Lead Machine Learning Engineer"
+        ],
+        "preferred_education": "AI/IT Degree or Master degree",
+        "summary": "Senior AI professionals design end-to-end systems, optimize performance, and mentor junior engineers.",
+        "required_techniques": {
+            "Languages": [
+                "Go", "Golang", "Html", "Java", "Javascript", "Js", "Kotlin", "Php", 
+                "Python", "R", "Sql", "Swift"
+            ],
+            "Cloud": [
+                "Alibaba Cloud", "Aws", "Azure", "Cloud", "Gcp", "Google Cloud"
+            ],
+            "DevOps": [
+                "Agile", "Ci/Cd", "Continuous Integration", "Devops", "Docker", "Git", 
+                "Kubernetes", "Linux", "Scrum"
+            ],
+            "Data and Frameworks": [
+                "Data Science", "Databricks", "Elasticsearch", "Flask", "Hadoop", "Kafka", 
+                "Mongodb", "Mysql", "Node.Js", "Nosql", "Numpy", "Pandas", "Postgresql", 
+                "React", "Redis", "Relational Databases", "Snowflake", "Spark", "Spring"
+            ],
+            "AI": [
+                "Ai", "Artificial Intelligence", "Computer Vision", "Deep Learning", "Genai", 
+                "Llms", "Machine Learning", "Ml", "Nlp", "Openai", "Pytorch", "Scikit-Learn", 
+                "Tensorflow"
+            ],
+            "Visualization": [
+                "Business Intelligence", "Dashboards", "Powerbi", "Tableau"
+            ],
+            "Others": ["System Architecture","Team Leadership"]
+        }
+    },
+    "Management": {
+        "min_experience_years": 10,
+        "typical_titles": [
+            "AI Manager",
+            "Head of AI",
+            "AI Project Manager",
+            "Director of AI"
+        ],
+        "preferred_education": "Master degree or above (AI/IT preferred)",
+        "summary": "Management-level roles oversee AI strategy, align projects with business goals, and manage technical teams.",
+        "core_skills": {
+            "Languages": [
+                "Go", "Html", "Java", "Javascript", "Js", "Python", "R", "Sql", "Typescript"
+            ],
+            "Cloud": [
+                "Alibaba Cloud", "Aws", "Azure", "Cloud", "Gcp", "Google Cloud"
+            ],
+            "DevOps": [
+                "Agile", "Ansible", "Ci/Cd", "Continuous Deployment", "Continuous Integration", 
+                "Devops", "Docker", "Git", "Jenkins", "Kubernetes", "Linux", "Scrum", "Terraform"
+            ],
+            "Data and Frameworks": [
+                "Data Science", "Databricks", "Flask", "Hadoop", "Kafka", "Mongodb", "Mysql", 
+                "Node.Js", "Nosql", "Postgresql", "React", "Spark", "Spring", "Vue"
+            ],
+            "AI": [
+                "Ai", "Artificial Intelligence", "Computer Vision", "Deep Learning", "Genai", 
+                "Llms", "Machine Learning", "Ml", "Openai", "Pytorch", "Tensorflow"
+            ],
+            "Visualization": [
+                "Business Intelligence", "Dashboards", "Grafana", "Powerbi", "Tableau"
+            ],
+            "Others": ["AI Strategy",
+            "Project Management",
+            "Stakeholder Communication",
+            "Budgeting",
+            "Team Leadership"]
+        }
+    }
+}
