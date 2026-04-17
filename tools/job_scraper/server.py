@@ -1,238 +1,244 @@
 from fastmcp import FastMCP
 import sys
-import json
-import re
-import requests
 import os
-from pathlib import Path
+import requests
+import pandas as pd
+import time
+from datetime import datetime
+from contextlib import redirect_stdout
+import re
+import json
 
 # Ensure logs go to stderr to protect the MCP JSON-RPC pipe
 sys.stdout.reconfigure(line_buffering=False)
 
-mcp = FastMCP("fit_score")
+mcp = FastMCP("job_scraper")
 
-# Configuration
-LOCAL_LLM_MODEL = "qwen3:0.6B"
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
+# API Configuration
+RAPIDAPI_KEY = "YOUR_KEY"
+API_HOST = "indeed-scraper-api.p.rapidapi.com"
 
-def load_rag_skills(level: str) -> dict:
-    """Safely loads the RAG JSON file and extracts the skills for the requested level."""
-    # Dynamically find the path to 6104/rag/rag_level_summary.json
-    base_dir = Path(__file__).resolve().parent.parent.parent
-    rag_file = base_dir / "rag" / "rag_level_summary.json"
-    
-    try:
-        if rag_file.exists():
-            with open(rag_file, "r", encoding="utf-8") as f:
-                rag_data = json.load(f)
+JOB_DETAILS_MEMORY = {}
+
+def safe_post_request(url, headers, payload, max_retries=5):
+    """Executes API requests with exponential backoff for handling HTTP 429 Rate Limits."""
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            
+            if response.status_code == 429:
+                wait_time = 5 * (attempt + 1)
+                print(f"Rate Limit (429). Pausing for {wait_time} seconds...", file=sys.stderr)
+                time.sleep(wait_time)
+                continue
                 
-            level_data = rag_data.get(level, {})
-            # Handle the schema difference: Management uses "core_skills", others use "required_techniques"
-            if level == "Management":
-                return level_data.get("core_skills", {})
-            else:
-                return level_data.get("required_techniques", {})
-    except Exception as e:
-        print(f"Error loading RAG Data: {e}", file=sys.stderr)
-        
-    return {}
+            if response.status_code in [502, 504]:
+                print(f"Server busy ({response.status_code}). Retrying...", file=sys.stderr)
+                time.sleep(3)
+                continue
+                
+            response.raise_for_status()
+            return response.json()
+            
+        except Exception as e:
+            if attempt == max_retries - 1: 
+                print(f"API Error: {e}", file=sys.stderr)
+                return None
+            time.sleep(3)
+    return None
 
-def evaluate_qual_and_bonus_llm(cv_edu, cv_exp, job_role, company_name):
-    """Uses local LLM to evaluate Qualifications and Industry Bonuses."""
+@mcp.tool()
+def fetch_live_jobs(keyword: str, location: str = "Hong Kong") -> list:
+    """Performs deep search pagination across job boards and caches results locally."""
+    global JOB_DETAILS_MEMORY
+    
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    safe_keyword = keyword.replace(" ", "_").lower()
+    folder_path = os.path.join("job_cache", date_str)
+    os.makedirs(folder_path, exist_ok=True)
+    cache_file = os.path.join(folder_path, f"{safe_keyword}_hk.csv")
+    
+    url = f"https://{API_HOST}/api/job"
+    headers = {
+        "x-rapidapi-key": RAPIDAPI_KEY, 
+        "x-rapidapi-host": API_HOST, 
+        "Content-Type": "application/json"
+    }
+
+    all_results = []
+    max_pages = 5 
+
+    with redirect_stdout(sys.stderr):
+        for page in range(1, max_pages + 1):
+            
+            payload = {
+                "scraper": {
+                    "maxRows": 20,
+                    "page": page,
+                    "query": keyword, 
+                    "location": location, 
+                    "sort": "date", 
+                    "fromDays": "14", 
+                    "country": "hk"
+                }
+            }
+
+            data = safe_post_request(url, headers, payload)
+            
+            if not data:
+                break
+                
+            jobs_list = data.get("returnvalue", {}).get("data", [])
+            
+            if not jobs_list:
+                break 
+
+            for index, job in enumerate(jobs_list):
+                url_str = job.get("jobUrl", "")
+                jk = url_str.split("jk=")[1].split("&")[0] if "jk=" in url_str else f"idx_{page}_{index}"
+                
+                JOB_DETAILS_MEMORY[jk] = job.get("descriptionText", "")
+
+                all_results.append({
+                    "job_id": jk,
+                    "title": job.get("title", "Unknown"),
+                    "company": job.get("companyName", "Unknown"),
+                    "location": job.get("location", {}).get("formattedAddressShort", "HK"),
+                    "post_date": date_str, 
+                    "url": url_str
+                })
+                
+            # Maintain API speed limit compliance
+            time.sleep(3.5) 
+
+    if all_results:
+        df_to_save = pd.DataFrame(all_results).fillna("")
+        df_to_save.to_csv(cache_file, index=False)
+        return df_to_save.to_dict('records')
+    
+    return []
+
+@mcp.tool()
+def fetch_job_detail(job_id: str) -> str:
+    global JOB_DETAILS_MEMORY
+    return JOB_DETAILS_MEMORY.get(job_id, "Description not found.")
+
+def call_local_ollama(description_text):
+    """Leverages local LLM to extract structured job schema for the master database."""
+    if not description_text or len(str(description_text)) < 50:
+        return {}
+
     prompt = f"""
-    You are an expert HR AI. Evaluate the candidate against the Job.
-
-    [CANDIDATE DATA]
-    Education History: {str(cv_edu)[:1000]}
-    Experience Text: {str(cv_exp)[:1000]}
-
-    [JOB DATA]
-    Role: {job_role}
-    Company: {company_name}
-
-    Task 1: Qualification Score (Find the Maximum)
-    Assign the HIGHEST applicable score based on the candidate's education:
-    25: Master degree or above IN AI, Data Science, or IT.
-    20: Bachelor degree IN AI, Data Science, or IT.
-    15: Higher Diploma / Associate Degree IN AI, Data Science, or IT.
-    10: Degree in a non-IT field, BUT candidate has AI/Tech certifications.
-    0: Degree in a non-IT field with no tech certs, or no degree.
-
-    Task 2: Bonuses
-    - bonus_academic (5 or 0): Is the degree major directly related to the company's specific industry?
-    - bonus_domain (5 or 0): Does the candidate's past work experience match the company's industry?
-
-    Respond STRICTLY in valid JSON. You MUST write a detailed "reasoning" step FIRST before outputting the scores.
+    You are an expert HR Data Engineer. Analyze this job description and return STRICT valid JSON.
+    
+    [JOB DESCRIPTION]
+    {str(description_text)[:3000]}
+    
+    [REQUIREMENTS]
+    Extract the following keys exactly:
     {{
-        "reasoning": "Step 1: The candidate holds a Master's in Data Science, which is an IT field, so the base is 25. Step 2: The company is... ",
-        "qualification_score": <int>,
-        "bonus_academic": <int>,
-        "bonus_domain": <int>
+        "is_Related": true or false (Is this an IT, AI, or Data Science job?),
+        "Level_of_career": "Entry", "Medium", "Senior", or "Management" (Evaluate based on text),
+        "MaxYearsExperience": <int> (Extract the minimum or maximum years of experience required, default 0),
+        "Qualification": "Extracted education requirements",
+        "Languages": "e.g., Python, SQL, Java",
+        "Cloud": "e.g., AWS, Azure",
+        "DevOps": "e.g., Docker, CI/CD",
+        "Data_and_Frameworks": "e.g., Pandas, PyTorch",
+        "AI": "e.g., Machine Learning, LLM",
+        "Visualization": "e.g., Tableau, PowerBI",
+        "Other": "Any other required tech skills"
     }}
     """
     
-    payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json"}
+    payload = {
+        "model": "qwen3:0.6B",
+        "prompt": prompt,
+        "stream": False,
+        "format": "json" 
+    }
     
     try:
-        res = requests.post(OLLAMA_API_URL, json=payload, timeout=15)
-        text = res.json().get("response", "{}")
-        clean_json = re.sub(r"```json\n?|```", "", text).strip()
-        data = json.loads(clean_json)
-        
-        q_score = int(data.get("qualification_score", 0))
-        if q_score not in [0, 10, 15, 20, 25]: q_score = 0
-        
-        return {
-            "qualification_score": q_score,
-            "bonus_academic": 5 if int(data.get("bonus_academic", 0)) > 0 else 0,
-            "bonus_domain": 5 if int(data.get("bonus_domain", 0)) > 0 else 0,
-            "justification": data.get("reasoning", "LLM Evaluated.")
-        }
+        res = requests.post("http://localhost:11434/api/generate", json=payload, timeout=60)
+        return json.loads(res.json().get("response", "{}"))
     except Exception as e:
-        print(f"LLM Eval Error: {e}", file=sys.stderr)
-        return {"qualification_score": 0, "bonus_academic": 0, "bonus_domain": 0, "justification": "Error connecting to LLM."}
-
+        print(f"Ollama Error: {e}", file=sys.stderr)
+        return {}
 
 @mcp.tool()
-def compute_fit_score(cv: dict, job: dict, company_profile: dict = None) -> dict:
-    # ==========================================
-    # 1. EXPERIENCE SCORING (50%)
-    # ==========================================
-    try: 
-        required_exp = float(job.get("MaxYearsExperience", 0))
-    except (ValueError, TypeError): 
-        required_exp = 0.0
-
-    total_exp = 0.0
-    ai_exp = 0.0
+def restructure_and_build_db(daily_csv_path: str, search_tag: str) -> str:
+    """Ingests scraped data, prevents duplicate processing, extracts LLM metrics, and appends to the database."""
+    global JOB_DETAILS_MEMORY
     
-    ai_keywords = ['ai', 'data', 'machine learning', 'software', 'developer', 'it', 'tech', 'python', 'analytics', 'research']
-
-    cv_experiences = cv.get("experience_list", cv.get("experience", []))
+    master_file = "analysised_job_list.csv" 
     
-    for exp in cv_experiences:
-        try: yrs = float(exp.get("years", 0))
-        except (ValueError, TypeError): yrs = 0.0
+    if not os.path.exists(daily_csv_path):
+        return f"Error: Could not find {daily_csv_path}"
         
-        title_desc = (str(exp.get("title", "")) + " " + str(exp.get("description", ""))).lower()
-        
-        total_exp += yrs
-        if any(kw in title_desc for kw in ai_keywords):
-            ai_exp += yrs
-
-    # Effective weighting formula: 0.5 * (Total + AI)
-    effective_exp = 0.5 * (total_exp + ai_exp)
-
-    if required_exp <= 0:
-        exp_score = 50.0
-        exp_just = f"Job requires 0 yrs. Candidate has {effective_exp:.1f} effective yrs. (50/50)"
+    df_daily = pd.read_csv(daily_csv_path).fillna("")
+    
+    if os.path.exists(master_file):
+        df_master = pd.read_csv(master_file).fillna("")
     else:
-        calculated_ratio = (effective_exp / required_exp) * 50.0
-        exp_score = min(calculated_ratio, 50.0)
-        exp_just = f"Total Exp: {total_exp:.1f}y, AI Exp: {ai_exp:.1f}y. Effective = {effective_exp:.1f}y. Req: {required_exp}y. Math: min(({effective_exp:.1f}/{required_exp}) * 50, 50) = {exp_score:.1f}/50"
+        df_master = pd.DataFrame(columns=[
+            "job_id", "search_tag", "PostingDate", "CompanyName", "JobTitle", 
+            "JobLink_or_ID", "is_Related", "Level_of_career", "MaxYearsExperience", 
+            "Qualification", "Languages", "Cloud", "DevOps", "Data and Frameworks", 
+            "AI", "Visualization", "Other", "full_description"
+        ])
 
-    # ==========================================
-    # 2 & 4. QUALIFICATION (25%) AND BONUSES (10%)
-    # ==========================================
-    job_role_desc = str(job.get("JobTitle", job.get("job_title", "Unknown Role")))
-    
-    llm_eval = evaluate_qual_and_bonus_llm(
-        cv_edu=cv.get("education", ""),
-        cv_exp=cv.get("experience_list", cv.get("experience", "")),
-        job_role=job_role_desc,
-        company_name=str(job.get("CompanyName", job.get("company_name", "Unknown Company")))
-    )
-    
-    qual_score = llm_eval["qualification_score"]
-    bonus_acad = llm_eval["bonus_academic"]
-    bonus_dom = llm_eval["bonus_domain"]
-    
-    qual_just = f"Score: {qual_score}/25. AI Eval: {llm_eval['justification']}"
-    bonus_just = f"Academic Align: +{bonus_acad}%. Domain Knowledge: +{bonus_dom}%."
+    processed_count = 0
+    skipped_count = 0
+    new_rows = []
 
-    # ==========================================
-    # 3. CORE SKILLS SCORING (25%) - UPDATED WITH RAG
-    # ==========================================
-    cv_skills_lower = json.dumps(cv.get("skills", "")).lower()
-    
-    # 1. Determine job level for potential RAG fallback
-    job_level = job.get("Level_of_career", "Entry")
-    rag_skills_for_level = load_rag_skills(job_level)
+    # Map existing jobs to prevent redundant LLM processing
+    transformed_jobs = {}
+    if not df_master.empty:
+        for _, row in df_master.iterrows():
+            jid = str(row.get('job_id', ''))
+            if jid:
+                transformed_jobs[jid] = True
 
-    # Dictionary mapping your CSV/Job Dictionary Keys to the JSON RAG Keys
-    skill_groups = {
-        "Languages": "Languages",
-        "Cloud": "Cloud",
-        "DevOps": "DevOps",
-        "Data and Frameworks": "Data and Frameworks",
-        "AI": "AI",
-        "Visualization": "Visualization",
-        "Other": "Others"  # Note: mapped to "Others" in RAG JSON
-    }
-
-    total_skill_score = 0
-    skill_justification_parts = []
-
-    for job_key, rag_key in skill_groups.items():
-        matched_skills = []
-        is_rag_fallback = False
-        
-        # Check what the job description requires
-        job_val = str(job.get(job_key, "")).strip().lower()
-        
-        # If the job didn't specify, fallback to RAG based on the level
-        if not job_val or job_val in ["n/a", "nan", "none"]:
-            is_rag_fallback = True
-            # Get from RAG and convert all to lowercase
-            required_skills = [s.lower() for s in rag_skills_for_level.get(rag_key, [])]
-        else:
-            required_skills = [s.strip() for s in job_val.split(",") if s.strip()]
+    with redirect_stdout(sys.stderr):
+        for _, row in df_daily.iterrows():
+            jid = str(row.get('job_id', ''))
             
-        # Count Matches (1 mark per matched skill)
-        for req in required_skills:
-            if req and req in cv_skills_lower:
-                matched_skills.append(req)
+            if jid in transformed_jobs:
+                skipped_count += 1
+                continue
                 
-        # Group Cap: Maximum 5 marks per group
-        group_score = min(len(matched_skills), 5)
-        total_skill_score += group_score
+            processed_count += 1
+            desc = JOB_DETAILS_MEMORY.get(jid, row.get('descriptionText', ''))
+            ext_data = call_local_ollama(desc)
+                
+            new_rows.append({
+                "job_id": jid,
+                "search_tag": search_tag,
+                "PostingDate": row.get('post_date'), 
+                "CompanyName": row.get('company'),
+                "JobTitle": row.get('title'),
+                "JobLink_or_ID": row.get('url'),
+                "is_Related": ext_data.get("is_Related", True),
+                "Level_of_career": ext_data.get("Level_of_career", "Entry"),
+                "MaxYearsExperience": ext_data.get("MaxYearsExperience", 0),
+                "Qualification": ext_data.get("Qualification", "N/A"),
+                "Languages": ext_data.get("Languages", ""),
+                "Cloud": ext_data.get("Cloud", ""),
+                "DevOps": ext_data.get("DevOps", ""),
+                "Data and Frameworks": ext_data.get("Data_and_Frameworks", ""),
+                "AI": ext_data.get("AI", ""),
+                "Visualization": ext_data.get("Visualization", ""),
+                "Other": ext_data.get("Other", ""),
+                "full_description": desc
+            })
+
+    if new_rows:
+        df_new = pd.DataFrame(new_rows)
+        df_combined = pd.concat([df_master, df_new], ignore_index=True)
+        df_combined = df_combined.drop_duplicates(subset=['job_id'], keep='last')
+        df_combined.to_csv(master_file, index=False)
         
-        # Build Justification string for this group
-        source_str = "RAG Level Standard" if is_rag_fallback else "Job Req"
-        if matched_skills:
-            skill_justification_parts.append(f"{job_key} [{group_score}/5] (via {source_str}): {', '.join(matched_skills)}")
-        else:
-            skill_justification_parts.append(f"{job_key} [0/5] (via {source_str}): None matched")
-
-    # Final Total Cap: Maximum 25 marks across all groups combined
-    final_skill_score = min(total_skill_score, 25.0)
-    
-    skill_just = "\n".join(skill_justification_parts) + f"\n--> Total Cap Applied: {final_skill_score}/25"
-
-    # ==========================================
-    # FINAL CALCULATION
-    # ==========================================
-    base_score = exp_score + qual_score + final_skill_score
-    total_score = base_score + bonus_acad + bonus_dom
-    
-    total_score = min(total_score, 100.0)
-
-    return {
-        "total_score": round(total_score, 1),
-        "breakdown": {
-            "experience_score_raw": round(exp_score, 1),
-            "qualification_score_raw": qual_score,
-            "skill_score_raw": round(final_skill_score, 1),
-            "bonuses": bonus_acad + bonus_dom
-        },
-        "justification_data": {
-            "experience": exp_just,
-            "qualification": qual_just,
-            "skills": skill_just,
-            "bonuses": bonus_just
-        },
-        "final_math": f"Base ({base_score:.1f}) + Bonuses ({bonus_acad + bonus_dom}) = {total_score}%"
-    }
+    return f"Pipeline Complete! Processed {processed_count} new jobs. Skipped {skipped_count} already transformed jobs."
 
 if __name__ == "__main__":
     mcp.run()
