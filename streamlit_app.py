@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import base64
 import os
-from orchestrator_v4 import run_agent
+from orchestrator import run_agent
 
 st.set_page_config(page_title="AI Career Agent", layout="wide")
 
@@ -29,12 +29,10 @@ with st.sidebar:
         with st.expander("🔍 Preview Parsed CV"):
             st.json(st.session_state.cv_data)
             
-        # Display the RAG Level Readiness Scores
         if "level_scores" in st.session_state and "error" not in st.session_state.level_scores:
             st.markdown("### 📊 Career Level Readiness")
             st.caption("Based on Full AI Evaluation against standard RAG requirements.")
             
-            # Force the display order from Junior to Senior
             level_order = ["Entry", "Medium", "Senior", "Management"]
             
             for level in level_order:
@@ -42,22 +40,19 @@ with st.sidebar:
                     scores = st.session_state.level_scores[level]
                     st.write(f"**{level}** ({scores['total']}%)")
                     
-                    # Progress bar out of 100%
                     progress_val = min(scores['total'] / 100.0, 1.0)
                     st.progress(progress_val)
                     
-                    # Exact breakdown including LLM Qualifications and Bonuses
                     st.caption(f"Exp: {scores['exp_score']}/50 (Req: {scores['req_exp']}y) | Skills: {scores['skill_score']}/25 | Edu: {scores['qual_score']}/25 | Bonus: +{scores['bonuses']}")
             st.markdown("---")
 
         # ==========================================
-        # NEW: AI CV Advisor Section
+        # AI CV Advisor Section
         # ==========================================
         if st.button("💡 Get AI CV Advice", use_container_width=True):
             with st.spinner("Analyzing your profile for improvements..."):
                 st.session_state.cv_advice = run_agent("cv_advisor", {"cv_data": st.session_state.cv_data})
         
-        # Display the Advice if it exists in session state
         if "cv_advice" in st.session_state:
             advice = st.session_state.cv_advice
             
@@ -105,7 +100,6 @@ def display_results(results_list):
             
             st.info(f"**🧠 Career Advisor Insight:**\n\n{res.get('advisor_insight', 'No insight provided.')}")
             
-            # Show Score Breakdown
             st.markdown("**📊 Scoring Details**")
             cols = st.columns(4)
             cols[0].metric("Experience", f"{score_data.get('breakdown', {}).get('experience_score_raw', 0)} / 50")
@@ -195,7 +189,6 @@ with tab3:
             st.error("You can only upload a maximum of 5 PDFs at a time.")
         else:
             with st.spinner(f"Analyzing {len(job_pdfs)} PDF Job Ads..."):
-                # Convert PDFs to base64
                 job_ads_b64 = [base64.b64encode(f.read()).decode() for f in job_pdfs]
                 
                 res = run_agent("option_3_pipeline", {
