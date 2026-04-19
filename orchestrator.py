@@ -26,7 +26,6 @@ llm = OllamaLLM(model=LOCAL_LLM_MODEL, temperature=0)
 # RAG Helper Functions
 # ===================================================
 def load_rag_json(filename):
-    """Safely loads a JSON file from the local RAG directory."""
     base_dir = Path(__file__).resolve().parent
     filepath = base_dir / "rag" / filename
     try:
@@ -41,23 +40,11 @@ def load_rag_json(filename):
 # AI Orchestration Logic
 # ===================================================
 def get_justification(score_dict, job_data):
-    """Formats the raw JSON scoring output and generates a tailored RAG recommendation."""
-    jd = score_dict.get("justification_data", {})
-    breakdown = score_dict.get("breakdown", {})
-    total_score = score_dict.get("total_score", 0)
-    
-    exp_score = breakdown.get("experience_score_raw", 0)
-    edu_score = breakdown.get("qualification_score_raw", 0)
-    bonus_score = breakdown.get("bonuses", 0)
-    skill_score = breakdown.get("skill_score_raw", 0)
-    
+    """Generates a structured JSON response containing targeted RAG advice for the UI."""
     company_name = str(job_data.get("CompanyName", job_data.get("company", "Unknown")))
-    
-    # 1. Load AWS Courses from RAG
     all_courses = load_rag_json("rag_course.json") or []
     aws_courses = [c for c in all_courses if str(c.get("provider", "")).upper() == "AWS"]
     
-    # 2. Load Company Industry from RAG
     company_profiles = load_rag_json("rag_company_profiles.json") or {}
     industry = "Unknown"
     
@@ -73,39 +60,24 @@ def get_justification(score_dict, job_data):
     industry_str = industry if industry != "Unknown" else "their specific tech sector"
     
     prompt = f"""
-    You are an elite executive career advisor. Summarize the candidate's fit and give a highly tailored recommendation.
-
-    [SCORING DATA]
-    Total Fit Score: {total_score}%
-    Experience: {exp_score}/50. Justification: {jd.get("experience", "")}
-    Education: {edu_score}/25. Justification: {jd.get("qualification", "")}
-    Bonuses: {bonus_score} pts. Justification: {jd.get("bonuses", "")}
-    Skills: {skill_score}/25. Justification: {jd.get("skills", "")}
-
-    [JOB & RAG CONTEXT]
-    Company: {company_name}
-    Industry: {industry_str}
-    Job Missing/Required Skills: Look at the Skills Justification to see what was missed.
-    Available AWS Courses to Suggest: {json.dumps(aws_courses)}
+    You are an elite executive career advisor. Evaluate the candidate's Fit Score of {score_dict.get('total_score', 0)}%.
+    [JOB & RAG CONTEXT] Company: {company_name}. Industry: {industry_str}. Available AWS Courses: {json.dumps(aws_courses)}
 
     [REQUIRED OUTPUT FORMAT]
-    Experience: [Summarize in 1 sentence] ({exp_score}/50)
-    Education & Bonuses: [Summarize in 1 sentence] ({edu_score + bonus_score} points)
-    Skills: [Summarize in 1 sentence] ({skill_score}/25)
-    
-    Recommendation: [Write a 2-part action plan. 
-    1. Analyze the job's skill requirements and suggest the ONE most relevant AWS course from the "Available AWS Courses" list provided. Explicitly mention the course name. 
-    2. Add a strong reminder telling the candidate to research new AI applications related specifically to the {industry_str} industry to prepare for the interview.]
+    Respond STRICTLY in valid JSON matching this exact structure:
+    {{
+        "course": "Suggest ONE most relevant AWS course explicitly by name.",
+        "interview_tip": "A strong reminder telling the candidate to research new AI applications related to {industry_str}."
+    }}
     """
-    
     try:
-        response = llm.invoke(prompt)
-        return str(response)
+        res = requests.post("http://localhost:11434/api/generate", json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json", "options": {"temperature": 0.0}}, timeout=30)
+        clean_json = re.sub(r"```json\n?|```", "", res.json().get("response", "{}")).strip()
+        return json.loads(clean_json)
     except Exception as e:
-        return f"Justification currently unavailable: {str(e)}"
+        return {"course": "Unavailable", "interview_tip": "Insight currently unavailable."}
 
 def check_keyword_relevance(keyword):
-    """Uses LLM to verify if a search keyword is related to tech industries."""
     prompt = f"""
     Is the job search keyword '{keyword}' related to Information Technology (IT), Data Science, Machine Learning (ML), or Artificial Intelligence (AI)?
     Respond STRICTLY with a valid JSON dictionary: {{"is_tech_related": true}} or {{"is_tech_related": false}}
@@ -119,19 +91,33 @@ def check_keyword_relevance(keyword):
         return True
 
 def filter_job_database(df, target_level):
-    """Applies strict 180-day timeframes and role relevance filters to the dataframe."""
-    df = df[df['is_Related'].astype(str).str.lower() == 'true']
-    df = df[df['Level_of_career'].astype(str).str.lower() == target_level.lower()]
+    """Filters jobs by the new specific tech booleans, timeframe, and level."""
+    # 1. Tech Relevance Filter
+    if 'is_IT' in df.columns:
+        tech_filter = (
+            (df['is_IT'].astype(str).str.lower() == 'true') | 
+            (df['is_DataScience'].astype(str).str.lower() == 'true') | 
+            (df['is_AI'].astype(str).str.lower() == 'true') | 
+            (df['is_ML'].astype(str).str.lower() == 'true')
+        )
+        df = df[tech_filter]
+    elif 'is_Related' in df.columns:
+        # Safe fallback for older CSV formats
+        df = df[df['is_Related'].astype(str).str.lower() == 'true']
+        
+    # 2. Career Level Filter
+    if 'Level_of_career' in df.columns:
+        df = df[df['Level_of_career'].astype(str).str.lower() == target_level.lower()]
     
+    # 3. Timeframe Filter (180 Days)
     cutoff_date = datetime.now() - timedelta(days=180)
-    
     def is_recent(date_str):
-        try:
-            return pd.to_datetime(date_str) >= cutoff_date
-        except:
-            return True
+        try: return pd.to_datetime(date_str) >= cutoff_date
+        except: return True
             
-    df = df[df['PostingDate'].apply(is_recent)]
+    if 'PostingDate' in df.columns:
+        df = df[df['PostingDate'].apply(is_recent)]
+        
     return df
 
 # ===================================================
@@ -194,9 +180,6 @@ def run_agent(action, payload=None):
         raw_mcp = _rt.call_tool("cv_parser", "parse_cv", {"pdf_base64": payload})
         return normalize_tool_output(raw_mcp)
 
-    # ----------------------------------------------------
-    # CAREER LEVEL EVALUATOR (SIDEBAR)
-    # ----------------------------------------------------
     if action == "evaluate_levels":
         cv_data = payload.get("cv_data")
         rag_levels = load_rag_json("rag_level_summary.json") or {}
@@ -205,27 +188,19 @@ def run_agent(action, payload=None):
             return {"error": "Could not load rag_level_summary.json"}
 
         results = {}
-        
         def score_level(level, data):
-            # Create a mock job to force the server to load RAG skills for this specific level
             mock_job = {
                 "JobTitle": f"Standard {level} AI/Data Role",
                 "CompanyName": "Tech Industry",
                 "MaxYearsExperience": data.get("min_experience_years", 0),
                 "Level_of_career": level
             }
-            
-            score_raw = _rt.call_tool("fit_score", "compute_fit_score", {
-                "cv": cv_data, "job": mock_job, "company_profile": {}
-            })
-            
+            score_raw = _rt.call_tool("fit_score", "compute_fit_score", {"cv": cv_data, "job": mock_job, "company_profile": {}})
             score_dict = normalize_tool_output(score_raw)
             return level, score_dict, data.get("min_experience_years", 0)
 
-        # Execute background evaluations concurrently
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             futures = [executor.submit(score_level, lvl, data) for lvl, data in rag_levels.items()]
-            
             for future in concurrent.futures.as_completed(futures):
                 try:
                     lvl, score_dict, req_exp = future.result()
@@ -240,12 +215,8 @@ def run_agent(action, payload=None):
                     }
                 except Exception as e:
                     print(f"Error scoring sidebar level {lvl}: {e}", file=sys.stderr)
-
         return results
 
-    # ----------------------------------------------------
-    # OPTION 1: LIVE MARKET PIPELINE
-    # ----------------------------------------------------
     if action == "option_1_pipeline":
         keyword = payload.get("keyword", "Data Scientist")
         target_level = payload.get("level", "Entry")
@@ -253,7 +224,7 @@ def run_agent(action, payload=None):
         
         is_tech = check_keyword_relevance(keyword)
         if not is_tech:
-            return {"error": f"The keyword '{keyword}' is not highly relevant to IT, Data Science, AI, or ML. Please try a different search."}
+            return {"error": f"The keyword '{keyword}' is not relevant. Please try a different search."}
 
         safe_keyword = keyword.replace(" ", "_").lower()
         date_str = datetime.now().strftime("%Y-%m-%d")
@@ -261,16 +232,10 @@ def run_agent(action, payload=None):
 
         _rt.call_tool("job_scraper", "fetch_live_jobs", {"keyword": keyword})
         
-        build_response = _rt.call_tool("job_scraper", "restructure_and_build_db", {
-            "daily_csv_path": cache_file,
-            "search_tag": keyword
-        })
+        build_response = _rt.call_tool("job_scraper", "restructure_and_build_db", {"daily_csv_path": cache_file})
         
         return run_agent("option_2_pipeline", {"level": target_level, "cv_data": cv_data, "system_msg": str(build_response)})
 
-    # ----------------------------------------------------
-    # OPTION 2: OFFLINE DATABASE PIPELINE
-    # ----------------------------------------------------
     if action == "option_2_pipeline":
         target_level = payload.get("level", "Entry")
         cv_data = payload.get("cv_data")
@@ -278,21 +243,19 @@ def run_agent(action, payload=None):
         
         db_path = "analysised_job_list.csv"
         if not os.path.exists(db_path):
-            return {"error": "Database 'analysised_job_list.csv' not found. Please run Option 1 first to generate data."}
+            return {"error": "Database 'analysised_job_list.csv' not found."}
             
         df = pd.read_csv(db_path)
         filtered_df = filter_job_database(df, target_level)
         
         if filtered_df.empty:
-            return {"error": f"No valid jobs found in the database matching Level: {target_level} within the last 180 days."}
+            return {"error": f"No valid jobs found."}
 
         jobs_to_score = filtered_df.to_dict('records')
         all_scored = []
         
         for job in jobs_to_score:
-            score_raw = _rt.call_tool("fit_score", "compute_fit_score", {
-                "cv": cv_data, "job": job, "company_profile": {}
-            })
+            score_raw = _rt.call_tool("fit_score", "compute_fit_score", {"cv": cv_data, "job": job, "company_profile": {}})
             score_dict = normalize_tool_output(score_raw)
             
             all_scored.append({
@@ -313,9 +276,6 @@ def run_agent(action, payload=None):
 
         return {"status": "success", "message": system_msg, "results": final_results}
 
-    # ----------------------------------------------------
-    # OPTION 3: PDF AD-HOC EVALUATOR
-    # ----------------------------------------------------
     if action == "option_3_pipeline":
         cv_data = payload.get("cv_data")
         job_ads_b64 = payload.get("job_ads", [])
@@ -333,20 +293,13 @@ def run_agent(action, payload=None):
             
             prompt = f"""
             You are an expert HR Data Engineer. Analyze this job description and return STRICT valid JSON.
-            [JOB DESCRIPTION]
-            {text_desc[:2000]}
-            [REQUIREMENTS]
-            Keys required: "JobTitle", "CompanyName", "is_IT" (bool), "is_DataScience" (bool), "is_AI" (bool), "is_ML" (bool), "Qualification", "MaxYearsExperience" (int), 
-            "Level_of_career" (Must evaluate to exactly one of: "Entry", "Medium", "Senior", "Management"),
-            "Skills": {{"Languages":"", "Cloud":"", "DevOps":"", "Data_and_Frameworks":"", "AI":"", "Visualization":"", "Other":""}}
+            [JOB DESCRIPTION] {text_desc[:2000]}
+            [REQUIREMENTS] Keys required: "JobTitle", "CompanyName", "is_IT" (bool), "is_DataScience" (bool), "is_AI" (bool), "is_ML" (bool), "Qualification", "MaxYearsExperience" (int), "Skills": {{"Languages":"", "Cloud":"", "DevOps":"", "Data_and_Frameworks":"", "AI":"", "Visualization":"", "Other":""}}
             """
             try:
-                res = requests.post("http://localhost:11434/api/generate", 
-                                    json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json"},
-                                    timeout=45)
+                res = requests.post("http://localhost:11434/api/generate", json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json", "options": {"temperature": 0.0}}, timeout=60)
                 ad_data = json.loads(res.json().get("response", "{}"))
-            except Exception as e:
-                print(f"LLM Error on PDF {i+1}: {e}", file=sys.stderr)
+            except:
                 ad_data = {}
 
             skills_dict = ad_data.get("Skills", {})
@@ -359,8 +312,22 @@ def run_agent(action, payload=None):
                 ad_data["Visualization"] = skills_dict.get("Visualization", "")
                 ad_data["Other"] = skills_dict.get("Other", "")
             
-            if "Level_of_career" not in ad_data:
-                 ad_data["Level_of_career"] = "Entry"
+            title_lower = str(ad_data.get("JobTitle", "")).lower()
+            management_keywords = ["head", "director", "manager", "lead", "executive"]
+            
+            try:
+                max_exp = float(ad_data.get("MaxYearsExperience", 0))
+            except (ValueError, TypeError):
+                max_exp = 0.0
+                
+            if any(kw in title_lower for kw in management_keywords):
+                ad_data["Level_of_career"] = "Management"
+            elif max_exp >= 5:
+                ad_data["Level_of_career"] = "Senior"
+            elif 3 <= max_exp < 5:
+                ad_data["Level_of_career"] = "Medium"
+            else:
+                ad_data["Level_of_career"] = "Entry"
 
             score_raw = _rt.call_tool("fit_score", "compute_fit_score", {"cv": cv_data, "job": ad_data})
             score_dict = normalize_tool_output(score_raw)
@@ -374,60 +341,35 @@ def run_agent(action, payload=None):
                 "temp_ad_data": ad_data
             }
 
-        # Process uploaded PDFs concurrently for performance
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             futures = [executor.submit(process_pdf, i, b64) for i, b64 in enumerate(job_ads_b64)]
-            
             for future in concurrent.futures.as_completed(futures):
                 try:
                     result = future.result()
                     temp_jobs.append(result.pop("temp_ad_data"))
                     all_scored_jobs.append(result)
-                except Exception as e:
-                    print(f"Threading error: {e}", file=sys.stderr)
+                except Exception as e: print(f"Threading error: {e}", file=sys.stderr)
 
         all_scored_jobs.sort(key=lambda x: x["job_index"])
         pd.DataFrame(temp_jobs).to_csv("temp.csv", index=False)
-            
         return {"status": "success", "results": all_scored_jobs}
 
-    # ----------------------------------------------------
-    # AI CV ADVISOR (SIDEBAR)
-    # ----------------------------------------------------
     if action == "cv_advisor":
         cv_data = payload.get("cv_data")
-        
         all_courses = load_rag_json("rag_course.json") or []
         aws_courses = [c for c in all_courses if str(c.get("provider", "")).upper() == "AWS"]
         
         prompt = f"""
-        You are an elite IT/AI Career Advisor. Analyze this candidate's CV data and provide a highly targeted, actionable improvement plan.
-        
-        [CANDIDATE CV DATA]
-        {json.dumps(cv_data)[:3000]}
-        
-        [AVAILABLE CERTIFICATIONS TO SUGGEST]
-        {json.dumps(aws_courses)}
-
-        Your goal is to help them level up to the next career stage. Provide honest, constructive feedback.
-        Respond STRICTLY with valid JSON matching this exact structure:
-        {{
-            "executive_summary": "1-2 sentences summarizing their current standing in the AI/Data market.",
-            "core_strengths": ["Strength 1", "Strength 2", "Strength 3"],
-            "critical_skill_gaps": ["Missing Tech 1", "Missing Tech 2"],
-            "recommended_course": "Name of ONE specific course from the Available Certifications list that fills their biggest gap",
-            "resume_action_points": ["Actionable tip to rewrite a bullet point", "Actionable tip on formatting or keywords"]
-        }}
+        You are an elite IT/AI Career Advisor. Analyze this candidate's CV data and provide an actionable improvement plan.
+        [CANDIDATE CV DATA] {json.dumps(cv_data)[:3000]}
+        [AVAILABLE CERTIFICATIONS] {json.dumps(aws_courses)}
+        Respond STRICTLY with valid JSON matching: {{"executive_summary": "...", "core_strengths": [".."], "critical_skill_gaps": [".."], "recommended_course": "..", "resume_action_points": [".."]}}
         """
-        
         try:
-            res = requests.post("http://localhost:11434/api/generate", 
-                                json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json"},
-                                timeout=20)
+            res = requests.post("http://localhost:11434/api/generate", json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json", "options": {"temperature": 0.0}}, timeout=20)
             clean_json = re.sub(r"```json\n?|```", "", res.json().get("response", "{}")).strip()
             return json.loads(clean_json)
         except Exception as e:
-            print(f"CV Advisor Error: {e}", file=sys.stderr)
             return {"error": "The AI Advisor is currently taking too long to respond. Please try again."}
 
     return {"error": f"Unknown action: {action}"}
