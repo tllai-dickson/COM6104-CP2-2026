@@ -15,7 +15,7 @@ sys.stdout.reconfigure(line_buffering=False)
 mcp = FastMCP("job_scraper")
 
 # API Configuration
-RAPIDAPI_KEY = "f8f856e397mshf29cf38ee778e63p187551jsn12aeb3da01f6"
+RAPIDAPI_KEY = "YOUR_KEY"
 API_HOST = "indeed-scraper-api.p.rapidapi.com"
 
 JOB_DETAILS_MEMORY = {}
