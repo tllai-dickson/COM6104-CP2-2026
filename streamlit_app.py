@@ -59,7 +59,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Helper function to display job results (FIXED TO MATCH ORCHESTRATOR SCHEMA)
+# Helper function to display job results 
 def display_results(results_list):
     """Cleanly displays the scored job results with AI recommendations."""
     if not results_list:
