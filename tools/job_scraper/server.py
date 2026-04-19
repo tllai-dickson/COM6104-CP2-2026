@@ -15,7 +15,7 @@ sys.stdout.reconfigure(line_buffering=False)
 mcp = FastMCP("job_scraper")
 
 # API Configuration
-RAPIDAPI_KEY = "YOUR_KEY"
+RAPIDAPI_KEY = "f8f856e397mshf29cf38ee778e63p187551jsn12aeb3da01f6"
 API_HOST = "indeed-scraper-api.p.rapidapi.com"
 
 JOB_DETAILS_MEMORY = {}
@@ -26,6 +26,12 @@ def safe_post_request(url, headers, payload, max_retries=5):
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=30)
             
+            if response.status_code != 200:
+                error_msg = response.text
+                if "exceeded" in error_msg.lower() or "quota" in error_msg.lower():
+                    print("CRITICAL ERROR: RapidAPI Monthly Quota Exceeded!", file=sys.stderr)
+                    return None
+                    
             if response.status_code == 429:
                 wait_time = 5 * (attempt + 1)
                 print(f"Rate Limit (429). Pausing for {wait_time} seconds...", file=sys.stderr)
@@ -73,7 +79,7 @@ def fetch_live_jobs(keyword: str, location: str = "Hong Kong") -> list:
             
             payload = {
                 "scraper": {
-                    "maxRows": 20,
+                    "maxRows": 20, 
                     "page": page,
                     "query": keyword, 
                     "location": location, 
@@ -83,6 +89,7 @@ def fetch_live_jobs(keyword: str, location: str = "Hong Kong") -> list:
                 }
             }
 
+            print(f"DEBUG: Fetching page {page} for '{keyword}'...", file=sys.stderr)
             data = safe_post_request(url, headers, payload)
             
             if not data:
@@ -100,7 +107,7 @@ def fetch_live_jobs(keyword: str, location: str = "Hong Kong") -> list:
                 JOB_DETAILS_MEMORY[jk] = job.get("descriptionText", "")
 
                 all_results.append({
-                    "job_id": jk,
+                    "job_id": jk, 
                     "title": job.get("title", "Unknown"),
                     "company": job.get("companyName", "Unknown"),
                     "location": job.get("location", {}).get("formattedAddressShort", "HK"),
@@ -108,10 +115,10 @@ def fetch_live_jobs(keyword: str, location: str = "Hong Kong") -> list:
                     "url": url_str
                 })
                 
-            # Maintain API speed limit compliance
             time.sleep(3.5) 
 
     if all_results:
+        print(f"DEBUG: Fetched {len(all_results)} jobs. Saving to cache.", file=sys.stderr)
         df_to_save = pd.DataFrame(all_results).fillna("")
         df_to_save.to_csv(cache_file, index=False)
         return df_to_save.to_dict('records')
@@ -137,8 +144,10 @@ def call_local_ollama(description_text):
     [REQUIREMENTS]
     Extract the following keys exactly:
     {{
-        "is_Related": true or false (Is this an IT, AI, or Data Science job?),
-        "Level_of_career": "Entry", "Medium", "Senior", or "Management" (Evaluate based on text),
+        "is_IT": true or false,
+        "is_DataScience": true or false,
+        "is_AI": true or false,
+        "is_ML": true or false,
         "MaxYearsExperience": <int> (Extract the minimum or maximum years of experience required, default 0),
         "Qualification": "Extracted education requirements",
         "Languages": "e.g., Python, SQL, Java",
@@ -155,7 +164,8 @@ def call_local_ollama(description_text):
         "model": "qwen3:0.6B",
         "prompt": prompt,
         "stream": False,
-        "format": "json" 
+        "format": "json",
+        "options": {"temperature": 0.0} 
     }
     
     try:
@@ -165,9 +175,29 @@ def call_local_ollama(description_text):
         print(f"Ollama Error: {e}", file=sys.stderr)
         return {}
 
+def determine_career_level(title, max_years):
+    """Deterministically calculates career level based on title keywords and experience."""
+    title_lower = str(title).lower()
+    management_keywords = ["head", "director", "manager", "lead", "executive"]
+    
+    if any(keyword in title_lower for keyword in management_keywords):
+        return "Management"
+        
+    try:
+        years = float(max_years)
+    except (ValueError, TypeError):
+        years = 0.0
+        
+    if years >= 5:
+        return "Senior"
+    elif 3 <= years < 5:
+        return "Medium"
+    else:
+        return "Entry"
+
 @mcp.tool()
-def restructure_and_build_db(daily_csv_path: str, search_tag: str) -> str:
-    """Ingests scraped data, prevents duplicate processing, extracts LLM metrics, and appends to the database."""
+def restructure_and_build_db(daily_csv_path: str) -> str:
+    """Ingests scraped data, unifies schema, calculates deterministic fields, and appends to Master DB."""
     global JOB_DETAILS_MEMORY
     
     master_file = "analysised_job_list.csv" 
@@ -177,65 +207,92 @@ def restructure_and_build_db(daily_csv_path: str, search_tag: str) -> str:
         
     df_daily = pd.read_csv(daily_csv_path).fillna("")
     
+    # EXACT Column Order as requested
+    target_columns = [
+        "RowID", "JobLink_or_ID", "JobTitle", "CompanyName", "PostingDate", "FullText", 
+        "is_IT", "is_DataScience", "is_AI", "is_ML", "is_Related", "Qualification", 
+        "MaxYearsExperience", "Level_of_career", "Languages", "Cloud", "DevOps", 
+        "Data and Frameworks", "AI", "Visualization", "Other"
+    ]
+    
     if os.path.exists(master_file):
         df_master = pd.read_csv(master_file).fillna("")
     else:
-        df_master = pd.DataFrame(columns=[
-            "job_id", "search_tag", "PostingDate", "CompanyName", "JobTitle", 
-            "JobLink_or_ID", "is_Related", "Level_of_career", "MaxYearsExperience", 
-            "Qualification", "Languages", "Cloud", "DevOps", "Data and Frameworks", 
-            "AI", "Visualization", "Other", "full_description"
-        ])
+        df_master = pd.DataFrame(columns=target_columns)
+
+    transformed_links = set(df_master['JobLink_or_ID'].astype(str).tolist()) if 'JobLink_or_ID' in df_master.columns else set()
 
     processed_count = 0
     skipped_count = 0
     new_rows = []
 
-    # Map existing jobs to prevent redundant LLM processing
-    transformed_jobs = {}
-    if not df_master.empty:
-        for _, row in df_master.iterrows():
-            jid = str(row.get('job_id', ''))
-            if jid:
-                transformed_jobs[jid] = True
-
     with redirect_stdout(sys.stderr):
         for _, row in df_daily.iterrows():
-            jid = str(row.get('job_id', ''))
+            job_link = str(row.get('url', ''))
             
-            if jid in transformed_jobs:
+            if job_link in transformed_links:
                 skipped_count += 1
                 continue
                 
             processed_count += 1
-            desc = JOB_DETAILS_MEMORY.get(jid, row.get('descriptionText', ''))
+            print(f"DEBUG: AI Extracting data for: {row.get('title')}...", file=sys.stderr)
+            
+            desc = JOB_DETAILS_MEMORY.get(str(row.get('job_id', '')), row.get('descriptionText', ''))
             ext_data = call_local_ollama(desc)
+            
+            is_it = ext_data.get("is_IT", False)
+            is_ds = ext_data.get("is_DataScience", False)
+            is_ai = ext_data.get("is_AI", False)
+            is_ml = ext_data.get("is_ML", False)
+            max_exp = ext_data.get("MaxYearsExperience", 0)
+            
+            is_related = bool(is_it or is_ds or is_ai or is_ml)
+            calculated_level = determine_career_level(row.get('title'), max_exp)
                 
             new_rows.append({
-                "job_id": jid,
-                "search_tag": search_tag,
-                "PostingDate": row.get('post_date'), 
-                "CompanyName": row.get('company'),
+                "RowID": "", # Will be calculated sequentially below
+                "JobLink_or_ID": job_link,
                 "JobTitle": row.get('title'),
-                "JobLink_or_ID": row.get('url'),
-                "is_Related": ext_data.get("is_Related", True),
-                "Level_of_career": ext_data.get("Level_of_career", "Entry"),
-                "MaxYearsExperience": ext_data.get("MaxYearsExperience", 0),
+                "CompanyName": row.get('company'),
+                "PostingDate": row.get('post_date'), 
+                "FullText": desc,
+                "is_IT": is_it,
+                "is_DataScience": is_ds,
+                "is_AI": is_ai,
+                "is_ML": is_ml,
+                "is_Related": is_related,
                 "Qualification": ext_data.get("Qualification", "N/A"),
+                "MaxYearsExperience": max_exp,
+                "Level_of_career": calculated_level,
                 "Languages": ext_data.get("Languages", ""),
                 "Cloud": ext_data.get("Cloud", ""),
                 "DevOps": ext_data.get("DevOps", ""),
                 "Data and Frameworks": ext_data.get("Data_and_Frameworks", ""),
                 "AI": ext_data.get("AI", ""),
                 "Visualization": ext_data.get("Visualization", ""),
-                "Other": ext_data.get("Other", ""),
-                "full_description": desc
+                "Other": ext_data.get("Other", "")
             })
 
     if new_rows:
         df_new = pd.DataFrame(new_rows)
         df_combined = pd.concat([df_master, df_new], ignore_index=True)
-        df_combined = df_combined.drop_duplicates(subset=['job_id'], keep='last')
+        
+        # Deduplicate
+        if 'JobLink_or_ID' in df_combined.columns:
+            df_combined = df_combined.drop_duplicates(subset=['JobLink_or_ID'], keep='last')
+            
+        # Ensure all target columns exist to prevent KeyError
+        for col in target_columns:
+            if col not in df_combined.columns:
+                df_combined[col] = ""
+                
+        # Calculate fresh RowIDs (1 to N)
+        df_combined = df_combined.reset_index(drop=True)
+        df_combined['RowID'] = df_combined.index + 1
+        
+        # Enforce exact column order
+        df_combined = df_combined[target_columns]
+                
         df_combined.to_csv(master_file, index=False)
         
     return f"Pipeline Complete! Processed {processed_count} new jobs. Skipped {skipped_count} already transformed jobs."
