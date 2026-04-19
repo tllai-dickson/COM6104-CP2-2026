@@ -66,7 +66,7 @@ def check_academic_relevance_llm(title, description):
     payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json","options": {"temperature": 0.0}}
     
     try:
-        res = requests.post(OLLAMA_API_URL, json=payload, timeout=15)
+        res = requests.post(OLLAMA_API_URL, json=payload, timeout=60)
         text = res.json().get("response", "{}")
         clean_json = re.sub(r"```json\n?|```", "", text).strip()
         data = json.loads(clean_json)
@@ -115,7 +115,7 @@ def evaluate_qual_and_bonus_llm(cv_edu, cv_exp, job_role, company_name, matched_
     payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json","options": {"temperature": 0.0}}
     
     try:
-        res = requests.post(OLLAMA_API_URL, json=payload, timeout=15)
+        res = requests.post(OLLAMA_API_URL, json=payload, timeout=60)
         text = res.json().get("response", "{}")
         clean_json = re.sub(r"```json\n?|```", "", text).strip()
         data = json.loads(clean_json)
