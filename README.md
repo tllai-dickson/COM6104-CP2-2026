@@ -36,7 +36,7 @@ ollama run qwen3:0.6B
 1. Clone the repository:
 ```bash
 git clone https://github.com/tllai-dickson/COM6104-CP2-2026.git
-cd ai-career-agent
+cd COM6104-CP2-2026
 ```
 
 2. Set up a virtual environment (Recommended):
