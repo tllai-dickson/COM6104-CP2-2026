@@ -35,7 +35,7 @@ ollama run qwen3:0.6B
 🛠️ Installation & Setup
 1. Clone the repository:
 ```bash
-git clone [https://github.com/yourusername/ai-career-agent.git](https://github.com/yourusername/ai-career-agent.git)
+git clone https://github.com/tllai-dickson/COM6104-CP2-2026.git
 cd ai-career-agent
 ```
 
