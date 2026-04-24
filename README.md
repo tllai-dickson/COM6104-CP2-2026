@@ -14,8 +14,8 @@ An advanced, multi-agent AI career advisor and job-matching platform. This appli
 ## 🏗️ Architecture
 
 This project is built on a distributed micro-agent architecture using [MCP (Model Context Protocol)](https://modelcontextprotocol.io/):
-1. **Frontend:** `Streamlit` provides the interactive UI.
-2. **Orchestrator:** `orchestrator_v4.py` manages asynchronous communication, threading, and LangChain LLM prompts.
+1. **Frontend:** `ai_agent_ui.py` provides the interactive UI.
+2. **Orchestrator:** `orchestrator.py` manages asynchronous communication, threading, and LangChain LLM prompts.
 3. **MCP Servers:** Dedicated FastMCP tools handle specific intensive tasks:
    * `cv_parser`: PDF text extraction and entity recognition.
    * `fit_score`: Complex RAG-assisted scoring algorithms calculating experience, education, and skill match percentages.
