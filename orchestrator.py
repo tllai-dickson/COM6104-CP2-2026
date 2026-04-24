@@ -366,7 +366,7 @@ def run_agent(action, payload=None):
         Respond STRICTLY with valid JSON matching: {{"executive_summary": "...", "core_strengths": [".."], "critical_skill_gaps": [".."], "recommended_course": "..", "resume_action_points": [".."]}}
         """
         try:
-            res = requests.post("http://localhost:11434/api/generate", json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json", "options": {"temperature": 0.0}}, timeout=20)
+            res = requests.post("http://localhost:11434/api/generate", json={"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json", "options": {"temperature": 0.0}}, timeout=300)
             clean_json = re.sub(r"```json\n?|```", "", res.json().get("response", "{}")).strip()
             return json.loads(clean_json)
         except Exception as e:
