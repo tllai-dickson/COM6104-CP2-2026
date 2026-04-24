@@ -256,7 +256,7 @@ with tab3:
     st.header("PDF Job Evaluator")
     st.write("Upload offline job advertisements (PDF format). The AI will extract the requirements, score them against your CV, and save them to `temp.csv`.")
     
-    job_pdfs = st.file_uploader("Upload Job Ads (PDF format only, Max 5)", type=["pdf"], accept_multiple_files=True)
+    job_pdfs = st.file_uploader("Upload Job Ads (PDF format only)", type=["pdf"], accept_multiple_files=True)
     
     if st.button("📁 Evaluate Uploaded PDFs", type="primary"):
         if "cv_data" not in st.session_state:
