@@ -56,7 +56,7 @@ Ensure your files are organized exactly like this for the MCP Orchestrator to fi
 ai-career-agent/
 │
 ├── ai_agent_ui.py            # Main Streamlit frontend
-├── orchestrator.py        # Brain/Routing logic
+├── orchestrator.py           # Brain/Routing logic
 ├── requirements.txt
 ├── analysised_job_list.csv   # Required for Option 2 (Offline Database)
 │
@@ -77,7 +77,7 @@ ai-career-agent/
 💻 Usage
 Start the application by running the Streamlit app:
 ```bash
-streamlit run streamlit_app_v7.py
+streamlit run ai_agent_ui.py
 ```
 
 Upload your CV: Use the sidebar to upload a PDF of your resume. Wait for the AI to parse it and generate your readiness scores.
