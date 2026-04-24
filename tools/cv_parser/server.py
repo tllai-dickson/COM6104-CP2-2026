@@ -13,7 +13,7 @@ from contextlib import contextmanager
 # Initialize FastMCP
 mcp = FastMCP("cv_parser")
 
-# Ensure logs go to stderr to protect the MCP JSON-RPC pipe
+# CRITICAL: Force logs to stderr immediately
 sys.stdout.reconfigure(line_buffering=False)
 
 CERT_KEYWORDS = {
@@ -26,7 +26,7 @@ CERT_KEYWORDS = {
 
 @contextmanager
 def silence_system_stdout():
-    """Physically redirects the system-level stdout to dev/null to prevent library spam."""
+    """Physically redirects the system-level stdout to dev/null."""
     new_target = os.open(os.devnull, os.O_WRONLY)
     old_stdout_fd = os.dup(sys.stdout.fileno())
     try:
@@ -50,8 +50,11 @@ def extract_md_from_b64(pdf_base64):
         print(f"Extraction Error: {e}", file=sys.stderr)
         return ""
 
+# ==========================================
+# NEW: Targeted LLM Call just for Education
+# ==========================================
 def extract_education_llm(text):
-    """Leverages local LLM to extract an array of degrees and associated subject domains."""
+    """Uses LLM to extract an array of all degrees with their specific subjects."""
     prompt = f"""
     Extract ALL educational degrees from the following CV text.
     Return STRICTLY valid JSON matching this exact structure:
@@ -87,10 +90,10 @@ def parse_cv(pdf_base64: str) -> dict:
     md_text = extract_md_from_b64(pdf_base64)
     text_lower = md_text.lower()
 
-    # 1. Education Extraction 
+    # 1. Education Extraction (Upgraded to LLM to capture all degrees + subjects)
     education_list = extract_education_llm(md_text)
 
-    # 2. Markdown Experience Extraction
+    # 2. Markdown Experience Extraction + Hierarchy of Rules (KEPT EXACTLY AS YOU WROTE IT)
     experience_list = []
     lines = md_text.split('\n')
     
@@ -136,12 +139,15 @@ def parse_cv(pdf_base64: str) -> dict:
             })
 
     return {
-        "education": education_list,  
+        "education": education_list,  # Now returns the full array of degrees!
         "experience_list": experience_list,
         "skills": list(set(skills)),
         "certifications": found_certs
     }
 
+# ==========================================
+# NEW: Job Ad Parsers for UI Tabs 4 & 5
+# ==========================================
 def extract_job_ad_llm(text):
     prompt = f"""
     Extract job requirements from this text.
@@ -166,16 +172,15 @@ def extract_job_ad_llm(text):
 
 @mcp.tool()
 def parse_job_ad_text(raw_text: str) -> dict:
-    """Processes plain text job descriptions for downstream evaluations."""
+    """Used by Tab 4: Quick Paste Evaluator"""
     return extract_job_ad_llm(raw_text)
 
 @mcp.tool()
 def parse_job_ad_pdf(pdf_base64: str) -> dict:
-    """Extracts raw markdown text from PDF job ads for the Orchestrator LLM parsing pipeline."""
+    """Used by Tab 5: PDF Evaluator"""
     md_text = extract_md_from_b64(pdf_base64)
     if not md_text.strip(): 
         return {"error": "Could not extract text from PDF."}
-        
     return {"raw_text": md_text}
 
 if __name__ == "__main__":
