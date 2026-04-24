@@ -4,6 +4,8 @@ An advanced, multi-agent AI career advisor and job-matching platform. This appli
 
 Demo Video: https://docs.google.com/videos/d/1o7tCBTtc0pJsqdNN9Tf2-q9OR6hJBnZ6XiDv2R4AADE/edit?usp=sharing
 
+<img width="761" height="882" alt="orchestrator_pipeline_final_escaped drawio" src="https://github.com/user-attachments/assets/6459f032-87c9-47d9-be2a-dce54d28e1b8" />
+
 ## ✨ Key Features
 
 * **Intelligent CV Parsing:** Extracts education, experience, skills, and certifications from PDF resumes using PyMuPDF and local LLMs.
@@ -177,3 +179,12 @@ The job_scraper functionality requires an active internet connection and may be 
   }
 }
 ```
+## 📄 LLM System Prompt
+<img width="546" height="266" alt="image" src="https://github.com/user-attachments/assets/f6920503-5065-4a46-a653-eca274b5ced5" />
+<img width="436" height="611" alt="image" src="https://github.com/user-attachments/assets/061a9c05-7516-4cbc-8140-c8e8d78e0b6b" />
+<img width="565" height="409" alt="image" src="https://github.com/user-attachments/assets/413f2103-4502-46bd-83a8-5f2233112266" />
+<img width="379" height="563" alt="image" src="https://github.com/user-attachments/assets/ca782953-bba4-4348-bc64-bb6a3b64607d" />
+<img width="571" height="179" alt="image" src="https://github.com/user-attachments/assets/4f5b0edf-6ff5-47ef-8f3b-74e1e493f4e9" />
+<img width="562" height="263" alt="image" src="https://github.com/user-attachments/assets/7cae9b1e-ce4c-4e2d-ab39-e0c67820fbe0" />
+<img width="500" height="596" alt="image" src="https://github.com/user-attachments/assets/fa8d9560-ebbf-4ae4-a34c-528dc789f4d4" />
+
