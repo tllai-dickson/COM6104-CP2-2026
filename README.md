@@ -2,6 +2,8 @@
 
 An advanced, multi-agent AI career advisor and job-matching platform. This application leverages the **Model Context Protocol (MCP)**, local LLMs via **Ollama**, and **Streamlit** to parse resumes, evaluate career readiness, and score candidates against live or offline job markets.
 
+Demo Video: https://docs.google.com/videos/d/1o7tCBTtc0pJsqdNN9Tf2-q9OR6hJBnZ6XiDv2R4AADE/edit?usp=sharing
+
 ## ✨ Key Features
 
 * **Intelligent CV Parsing:** Extracts education, experience, skills, and certifications from PDF resumes using PyMuPDF and local LLMs.
