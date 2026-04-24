@@ -98,3 +98,82 @@ Option 3: Upload up to 5 PDF job descriptions for targeted scoring.
 The application relies heavily on a local LLM. Depending on your hardware, processing PDFs and generating justifications may take 15-30 seconds.
 
 The job_scraper functionality requires an active internet connection and may be subject to rate-limiting depending on the target job board.
+
+## 📊 RAG Data Structure
+
+1. rag_level_summary.json
+```bash
+{
+    "Entry": {
+        "min_experience_years": 2,
+        "typical_titles": [
+            "AI Engineer Trainee",
+            "Junior Data Scientist",
+            "Machine Learning Assistant",
+            "AI Analyst"
+        ],
+        "preferred_education": "AI/IT Degree or equivalent",
+        "summary": "Entry-level AI roles focus on foundational machine learning knowledge, programming basics, and supervised tasks.",
+        "required_techniques": {
+            "Languages": [
+                "Bash", "Css", "Go", "Golang", "Html", "Java", "Javascript", "Js", 
+                "Kotlin", "Php", "Python", "R", "Ruby", "Rust", "Scala", "Sql", 
+                "Swift", "Typescript"
+            ],
+            "Cloud": [
+                "Alibaba Cloud", "Aws", "Azure", "Cloud", "Gcp", "Google Cloud"
+            ],
+            "DevOps": [
+                "Agile", "Ansible", "Ci/Cd", "Continuous Deployment", "Continuous Integration", 
+                "Devops", "Docker", "Git", "Influx", "Kubernetes", "Linux", "Pub/Sub", 
+                "Scrum", "Terraform"
+            ],
+            "Data and Frameworks": [
+                "Angular", "Data Science", "Databricks", "Elasticsearch", "Hadoop", "Kafka", 
+                "Mongodb", "Mysql", "Node.Js", "Nosql", "Numpy", "Pandas", "Postgresql", 
+                "React", "Redis", "Relational Databases", "Snowflake", "Spark", "Spring", "Vue"
+            ],
+            "AI": [
+                "Ai", "Artificial Intelligence", "Computer Vision", "Deep Learning", "Genai", 
+                "Keras", "Llms", "Machine Learning", "Ml", "Nlp", "Openai", "Pytorch", 
+                "Scikit-Learn", "Tensorflow"
+            ],
+            "Visualization": [
+                "Business Intelligence", "D3", "Dashboards", "Grafana", "Matplotlib", 
+                "Powerbi", "Qlik", "Tableau"
+            ],
+            "Others": []
+        }
+    }
+  }
+```
+
+2. rag_course.json
+```bash
+{
+    "course_name": "AWS Certified AI Practitioner",
+    "provider": "AWS",
+    "target_skills": [
+      "AI/ML Concepts",
+      "Generative AI",
+      "Cloud Security",
+      "Ethics"
+    ],
+    "level": "Foundation",
+    "url": "https://aws.amazon.com/certification/certified-ai-practitioner/",
+    "score": 1
+  }
+```
+3. rag_company_profiles.json
+```bash
+{
+ "chiyu_banking_corporation_limited": {
+    "domain": [
+      "Banking",
+      "Financial Services"
+    ],
+    "industry": "Finance",
+    "size": "Medium"
+  }
+}
+```
