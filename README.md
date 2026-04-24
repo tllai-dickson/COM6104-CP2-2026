@@ -55,8 +55,8 @@ Ensure your files are organized exactly like this for the MCP Orchestrator to fi
 ```Plaintext
 ai-career-agent/
 │
-├── streamlit_app_v7.py       # Main Streamlit frontend
-├── orchestrator_v4.py        # Brain/Routing logic
+├── ai_agent_ui.py            # Main Streamlit frontend
+├── orchestrator.py        # Brain/Routing logic
 ├── requirements.txt
 ├── analysised_job_list.csv   # Required for Option 2 (Offline Database)
 │
