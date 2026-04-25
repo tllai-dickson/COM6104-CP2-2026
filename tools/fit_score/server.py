@@ -1,231 +1,305 @@
-import sys
-import os
-import re
-import json
-import base64
-import requests
-from contextlib import redirect_stdout
 from fastmcp import FastMCP
-import fitz
-import pymupdf4llm
-from contextlib import contextmanager
+import sys
+import json
+import re
+import requests
+import os
+from pathlib import Path
 
-# Initialize FastMCP
-mcp = FastMCP("cv_parser")
-
-# CRITICAL: Force logs to stderr immediately
+# Ensure logs go to stderr to protect the MCP JSON-RPC pipe
 sys.stdout.reconfigure(line_buffering=False)
 
-CERT_KEYWORDS = {
-    "aws certified cloud practitioner": {"name": "AWS Certified Cloud Practitioner", "level": "Foundation", "bonus": 1},
-    "aws certified ai practitioner": {"name": "AWS Certified AI Practitioner", "level": "Foundation", "bonus": 1},
-    "cloud digital leader": {"name": "Cloud Digital Leader", "level": "Foundation", "bonus": 2},
-    "aws certified solutions architect associate": {"name": "AWS Certified Solutions Architect – Associate", "level": "Associate", "bonus": 2},
-    "aws certified developer associate": {"name": "AWS Certified Developer – Associate", "level": "Associate", "bonus": 2},
-    "aws certified cloudops engineer associate": {"name": "AWS Certified CloudOps Engineer – Associate", "level": "Associate", "bonus": 2},
-    "aws certified data engineer associate": {"name": "AWS Certified Data Engineer – Associate", "level": "Associate", "bonus": 2},
-    "aws certified machine learning engineer associate": {"name": "AWS Certified Machine Learning Engineer – Associate", "level": "Associate", "bonus": 2},
-    "associate cloud engineer": {"name": "Associate Cloud Engineer", "level": "Associate", "bonus": 2},
-    "cloud developer associate": {"name": "Cloud Developer (Associate)", "level": "Associate", "bonus": 2},
-    "cloud devops engineer associate": {"name": "Cloud DevOps Engineer (Associate)", "level": "Associate", "bonus": 2},
-    "azure administrator associate": {"name": "Microsoft Certified: Azure Administrator Associate", "level": "Associate", "bonus": 2},
-    "power platform developer associate": {"name": "Microsoft Certified: Power Platform Developer Associate", "level": "Associate", "bonus": 2},
-    "azure ai engineer associate": {"name": "Microsoft Certified: Azure AI Engineer Associate", "level": "Associate", "bonus": 2},
-    "azure data scientist associate": {"name": "Microsoft Certified: Azure Data Scientist Associate", "level": "Associate", "bonus": 2},
-    "azure database administrator associate": {"name": "Microsoft Certified: Azure Database Administrator Associate", "level": "Associate", "bonus": 2},
-    "azure network engineer associate": {"name": "Microsoft Certified: Azure Network Engineer Associate", "level": "Associate", "bonus": 2},
-    "power bi data analyst associate": {"name": "Microsoft Certified: Power BI Data Analyst Associate", "level": "Associate", "bonus": 3},
-    "aws certified solutions architect professional": {"name": "AWS Certified Solutions Architect – Professional", "level": "Professional", "bonus": 3},
-    "aws certified devops engineer professional": {"name": "AWS Certified DevOps Engineer – Professional", "level": "Professional", "bonus": 3},
-    "aws certified generative ai developer professional": {"name": "AWS Certified Generative AI Developer – Professional", "level": "Professional", "bonus": 3},
-    "professional cloud architect": {"name": "Professional Cloud Architect", "level": "Professional", "bonus": 3},
-    "professional cloud developer": {"name": "Professional Cloud Developer", "level": "Professional", "bonus": 3},
-    "professional cloud devops engineer": {"name": "Professional Cloud DevOps Engineer", "level": "Professional", "bonus": 3},
-    "professional cloud security engineer": {"name": "Professional Cloud Security Engineer", "level": "Professional", "bonus": 3},
-    "professional cloud network engineer": {"name": "Professional Cloud Network Engineer", "level": "Professional", "bonus": 3},
-    "professional data engineer": {"name": "Professional Data Engineer", "level": "Professional", "bonus": 3},
-    "professional machine learning engineer": {"name": "Professional Machine Learning Engineer", "level": "Professional", "bonus": 3},
-    "professional collaboration engineer": {"name": "Professional Collaboration Engineer", "level": "Professional", "bonus": 3},
-    "azure solutions architect expert": {"name": "Microsoft Certified: Azure Solutions Architect Expert", "level": "Professional", "bonus": 3},
-    "power platform solutions architect expert": {"name": "Microsoft Certified: Power Platform Solutions Architect Expert", "level": "Professional", "bonus": 3},
-    "devops engineer expert": {"name": "Microsoft Certified: DevOps Engineer Expert", "level": "Professional", "bonus": 3},
-    "aws certified security specialty": {"name": "AWS Certified Security – Specialty", "level": "Specialty", "bonus": 3},
-    "aws certified advanced networking specialty": {"name": "AWS Certified Advanced Networking – Specialty", "level": "Specialty", "bonus": 3},
-    "aws certified machine learning specialty": {"name": "AWS Certified Machine Learning – Specialty", "level": "Specialty", "bonus": 3},
-    "azure virtual desktop specialty": {"name": "Microsoft Certified: Azure Virtual Desktop Specialty", "level": "Specialty", "bonus": 3},
-    "azure cosmos db developer specialty": {"name": "Microsoft Certified: Azure Cosmos DB Developer Specialty", "level": "Specialty", "bonus": 1},
-    "huawei cloud migration competency": {"name": "Huawei Cloud Certified - Cloud Migration Competency (Advanced)", "level": "General", "bonus": 1},
-    "huawei cloud service partner": {"name": "Huawei Cloud Service Partner / Consulting Partners / Cloud Solution Provider", "level": "General", "bonus": 1},
-    "outsystems partner": {"name": "OutSystems Partner", "level": "General", "bonus": 1},
-    "cisa": {"name": "CISA – Certified Information Systems Auditor (ISACA)", "level": "General", "bonus": 1},
-    "cism": {"name": "CISM – Certified Information Security Manager (ISACA)", "level": "General", "bonus": 1},
-    "ccsp": {"name": "CCSP – Certified Cloud Security Professional ((ISC)²)", "level": "General", "bonus": 1},
-    "iso 27001 certified": {"name": "ISO/IEC 27001:2013 Certified (Information Security Management System)", "level": "General", "bonus": 1},
-    "iso 27001 registered": {"name": "ISO 27001 Registered", "level": "General", "bonus": 3}
-}
+mcp = FastMCP("fit_score")
 
-@contextmanager
-def silence_system_stdout():
-    """Physically redirects the system-level stdout to dev/null."""
-    new_target = os.open(os.devnull, os.O_WRONLY)
-    old_stdout_fd = os.dup(sys.stdout.fileno())
-    try:
-        os.dup2(new_target, sys.stdout.fileno())
-        yield
-    finally:
-        os.dup2(old_stdout_fd, sys.stdout.fileno())
-        os.close(new_target)
-        os.close(old_stdout_fd)
+# Configuration
+LOCAL_LLM_MODEL = "qwen3:0.6B"
+OLLAMA_API_URL = "http://localhost:11434/api/generate"
 
-def extract_md_from_b64(pdf_base64):
-    try:
-        pdf_bytes = base64.b64decode(pdf_base64)
-        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        
-        with silence_system_stdout():
-            md_text = pymupdf4llm.to_markdown(doc)
-            
-        return md_text
-    except Exception as e:
-        print(f"Extraction Error: {e}", file=sys.stderr)
-        return ""
-
-# ==========================================
-# NEW: Targeted LLM Call just for Education
-# ==========================================
-def extract_education_llm(text):
-    """Uses LLM to extract an array of all degrees with their specific subjects."""
-    prompt = f"""
-    Extract ALL educational degrees from the following CV text.
-    Return STRICTLY valid JSON matching this exact structure:
-    [
-        {{
-            "degree_level": "e.g., Bachelor, Master, PhD, Diploma",
-            "subject": "e.g., Computer Science, Data Science, Finance",
-            "institution": "University Name"
-        }}
-    ]
-    If no education is found, return [].
+def load_rag_skills(level: str) -> dict:
+    """Safely loads the required career level skills from the RAG directory."""
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    rag_file = base_dir / "rag" / "rag_level_summary.json"
     
-    [CV TEXT]
-    {text[:4000]}
-    """
-    payload = {"model": "qwen3:0.6B", "prompt": prompt, "stream": False, "format": "json","options": {"temperature": 0.0}}
     try:
-        res = requests.post("http://localhost:11434/api/generate", json=payload, timeout=15)
-        clean = re.sub(r"```json\n?|```", "", res.json().get("response", "[]")).strip()
-        return json.loads(clean)
+        if rag_file.exists():
+            with open(rag_file, "r", encoding="utf-8") as f:
+                rag_data = json.load(f)
+                
+            level_data = rag_data.get(level, {})
+            if level == "Management":
+                return level_data.get("core_skills", {})
+            else:
+                return level_data.get("required_techniques", {})
     except Exception as e:
-        print(f"LLM Education Parsing Error: {e}", file=sys.stderr)
-        return []
+        print(f"Error loading RAG Skills: {e}", file=sys.stderr)
+        
+    return {}
 
-TECH_DICTIONARY = [
-    "python", "sql", "r", "matlab", "tensorflow", "pytorch", 
-    "pandas", "numpy", "scikit-learn", "nlp", "computer vision", 
-    "llm", "aws", "azure", "gcp", "docker", "git"
-]
+def load_rag_courses() -> list:
+    """Loads recognized industry certifications from RAG."""
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    rag_file = base_dir / "rag" / "rag_course.json"
+    
+    try:
+        if rag_file.exists():
+            with open(rag_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error loading RAG Courses: {e}", file=sys.stderr)
+        
+    return []
+
+def check_academic_relevance_llm(title, description):
+    """Uses LLM to verify if a Research/Teaching Assistant role contains applied technical engineering."""
+    prompt = f"""
+    Analyze this academic role. 
+    Does it involve heavy, hands-on technical work in AI, Data Science, or Software Engineering (e.g., building deep learning models, writing production code, advanced data pipelines)?
+    Or is it mostly administrative, basic grading, or non-technical academic research? Or is it overlapping with candidant higher-education period?
+
+    [TITLE]: {title}
+    [DESCRIPTION]: {str(description)[:1000]}
+
+    Respond STRICTLY with valid JSON containing a single boolean key "is_heavy_tech". 
+    Set it to true if it is heavy engineering/data science. Set it to false if it is standard academic/admin work. Set it to false if it is overlapping with candidant higher-education period.
+    """
+    
+    payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json","options": {"temperature": 0.0}}
+    
+    try:
+        res = requests.post(OLLAMA_API_URL, json=payload, timeout=60)
+        text = res.json().get("response", "{}")
+        clean_json = re.sub(r"```json\n?|```", "", text).strip()
+        data = json.loads(clean_json)
+        return bool(data.get("is_heavy_tech", False))
+    except Exception as e:
+        print(f"LLM Academic Eval Error: {e}", file=sys.stderr)
+        return False 
+
+def evaluate_qual_and_bonus_llm(cv_edu, cv_exp, job_role, company_name, matched_certs):
+    """Uses local LLM to evaluate academic qualifications and calculate industry alignment bonuses."""
+    cert_text = ", ".join(matched_certs) if matched_certs else "None"
+    
+    prompt = f"""
+    You are an expert HR AI. Evaluate the candidate against the Job.
+
+    [CANDIDATE DATA]
+    Education History: {str(cv_edu)[:1000]}
+    Experience Text: {str(cv_exp)[:1000]}
+    Recognized AI/Tech Certificates Found: {cert_text}
+
+    [JOB DATA]
+    Role: {job_role}
+    Company: {company_name}
+
+    Task 1: Qualification Score (Find the Maximum)
+    Assign the HIGHEST applicable score based on the candidate's education:
+    25: Master degree or above IN AI, Data, or IT.
+    20: Bachelor degree IN AI, Data, or IT.
+    15: Higher Diploma / Associate Degree IN AI, Data, or IT.
+    10: Degree in a non-IT field, BUT the candidate has at least one Recognized AI/Tech Certificate listed above.
+    0: Degree in a non-IT field with no recognized tech certs, or no degree.
+
+    Task 2: Bonuses
+    - bonus_academic (5 or 0): Is the degree major directly related to the company's specific industry?
+    - bonus_domain (5 or 0): Does the candidate's past work experience match the company's industry?
+
+    Respond STRICTLY in valid JSON. You MUST write a detailed "reasoning" step FIRST before outputting the scores.
+    {{
+        "reasoning": "Step 1: The candidate holds a Master's in Data Science, which is an IT field, so the base is 25. Step 2: The company is... ",
+        "qualification_score": <int>,
+        "bonus_academic": <int>,
+        "bonus_domain": <int>
+    }}
+    """
+    
+    payload = {"model": LOCAL_LLM_MODEL, "prompt": prompt, "stream": False, "format": "json","options": {"temperature": 0.0}}
+    
+    try:
+        res = requests.post(OLLAMA_API_URL, json=payload, timeout=60)
+        text = res.json().get("response", "{}")
+        clean_json = re.sub(r"```json\n?|```", "", text).strip()
+        data = json.loads(clean_json)
+        
+        q_score = int(data.get("qualification_score", 0))
+        if q_score not in [0, 10, 15, 20, 25]: q_score = 0
+        
+        return {
+            "qualification_score": q_score,
+            "bonus_academic": 5 if int(data.get("bonus_academic", 0)) > 0 else 0,
+            "bonus_domain": 5 if int(data.get("bonus_domain", 0)) > 0 else 0,
+            "justification": data.get("reasoning", "LLM Evaluated.")
+        }
+    except Exception as e:
+        print(f"LLM Eval Error: {e}", file=sys.stderr)
+        return {"qualification_score": 0, "bonus_academic": 0, "bonus_domain": 0, "justification": "Error connecting to LLM."}
 
 @mcp.tool()
-def parse_cv(pdf_base64: str) -> dict:
-    md_text = extract_md_from_b64(pdf_base64)
-    text_lower = md_text.lower()
-
-    # 1. Education Extraction (Upgraded to LLM to capture all degrees + subjects)
-    education_list = extract_education_llm(md_text)
-
-    # 2. Markdown Experience Extraction + Hierarchy of Rules (KEPT EXACTLY AS YOU WROTE IT)
-    experience_list = []
-    lines = md_text.split('\n')
+def compute_fit_score(cv: dict, job: dict, company_profile: dict = None) -> dict:
     
-    for line in lines:
-        line_l = line.lower().strip()
-        
-        if line_l.startswith("#") or line_l.startswith("**"):
-            date_match = re.search(r'(\d{4})|([A-Z][a-z]+\s\d{4})', line)
+    # ------------------------------------------
+    # 0. PRE-PROCESSING: Match Certificates
+    # ------------------------------------------
+    rag_courses = load_rag_courses()
+    cv_full_text_lower = json.dumps(cv).lower()
+    
+    matched_cert_names = []
+    cert_bonus_raw = 0
+    
+    for course in rag_courses:
+        course_name = course.get("course_name", "")
+        if course_name and course_name.lower() in cv_full_text_lower:
+            matched_cert_names.append(course_name)
+            cert_bonus_raw += course.get("score", 0)
             
-            if date_match:
-                job_title = line.strip().replace('#', '').replace('*', '').strip()[:30]
+    bonus_cert = min(cert_bonus_raw, 5)
+
+    # ==========================================
+    # 1. EXPERIENCE SCORING (50%)
+    # ==========================================
+    try: 
+        required_exp = float(job.get("MaxYearsExperience", 0))
+    except (ValueError, TypeError): 
+        required_exp = 0.0
+
+    total_exp = 0.0
+    ai_exp = 0.0
+    ai_keywords = ['ai', 'data', 'machine learning', 'software', 'developer', 'it', 'tech', 'python', 'analytics', 'research']
+    cv_experiences = cv.get("experience_list", cv.get("experience", []))
+    
+    for exp in cv_experiences:
+        try: yrs = float(exp.get("years", 0))
+        except (ValueError, TypeError): yrs = 0.0
+        
+        title_desc = (str(exp.get("title", "")) + " " + str(exp.get("description", ""))).lower()
+        
+        is_intern_flag = exp.get("is_internship", False)
+        
+        basic_academic_keywords = ["intern", "internship", "student", "part-time", "trainee"]
+        assistant_keywords = ["research assistant", "teaching assistant"]
+        
+        is_basic_academic = is_intern_flag or any(kw in title_desc for kw in basic_academic_keywords)
+        is_assistant = any(kw in title_desc for kw in assistant_keywords)
+        
+        apply_discount = False
+        
+        if is_basic_academic:
+            apply_discount = True
+        elif is_assistant:
+            # Verify RA/TA technical depth dynamically
+            is_heavy_tech = check_academic_relevance_llm(exp.get("title", ""), exp.get("description", ""))
+            if not is_heavy_tech:
+                apply_discount = True 
                 
-                if "student assistant" in line_l:
-                    continue
-                    
-                pt_keywords = ["intern", "part-time", "trainee", "undergraduate", "summer"]
-                is_intern = any(kw in line_l for kw in pt_keywords)
-                
-                ft_keywords = [
-                    "analyst", "engineer", "specialist", "scientist", 
-                    "manager", "developer", "consultant", 
-                    "research assistant", "teaching assistant"
-                ]
-                is_fulltime = any(kw in line_l for kw in ft_keywords)
-                
-                if is_intern:
-                    experience_list.append({"title": job_title, "years": 1.0, "is_internship": True})
-                elif is_fulltime and not is_intern:
-                    experience_list.append({"title": job_title, "years": 3.0, "is_internship": False})
+        if apply_discount:
+            yrs = yrs * 0.5 
+            
+        total_exp += yrs
+        if any(kw in title_desc for kw in ai_keywords):
+            ai_exp += yrs
 
-    if not experience_list and any(word in text_lower for word in ["intern", "part-time"]):
-        experience_list.append({"title": "Intern / PT", "years": 1.0, "is_internship": True})
+    effective_exp = 0.5 * (total_exp + ai_exp)
 
-    # 3. Skills Extraction
-    skills = [skill for skill in TECH_DICTIONARY if skill in text_lower]
+    if required_exp <= 0:
+        exp_score = 50.0
+        exp_just = f"Job requires 0 yrs. Candidate has {effective_exp:.1f} effective yrs. (50/50)"
+    else:
+        calculated_ratio = (effective_exp / required_exp) * 50.0
+        exp_score = min(calculated_ratio, 50.0)
+        exp_just = f"Total Exp: {total_exp:.1f}y, AI Exp: {ai_exp:.1f}y. Effective = {effective_exp:.1f}y. Req: {required_exp}y. Math: min(({effective_exp:.1f}/{required_exp}) * 50, 50) = {exp_score:.1f}/50"
 
-    # 4. Certification Extraction
-    found_certs = []
-    for key, info in CERT_KEYWORDS.items():
-        if key in text_lower:
-            found_certs.append({
-                "cert_name": info["name"], "quality_level": info["level"], "bonus_mark": info["bonus"]
-            })
+    # ==========================================
+    # 2 & 4. QUALIFICATION (25%) AND BONUSES (Max 15%)
+    # ==========================================
+    job_role_desc = str(job.get("JobTitle", job.get("job_title", "Unknown Role")))
+    
+    llm_eval = evaluate_qual_and_bonus_llm(
+        cv_edu=cv.get("education", ""),
+        cv_exp=cv.get("experience_list", cv.get("experience", "")),
+        job_role=job_role_desc,
+        company_name=str(job.get("CompanyName", job.get("company_name", "Unknown Company"))),
+        matched_certs=matched_cert_names
+    )
+    
+    qual_score = llm_eval["qualification_score"]
+    bonus_acad = llm_eval["bonus_academic"]
+    bonus_dom = llm_eval["bonus_domain"]
+    
+    qual_just = f"Score: {qual_score}/25. AI Eval: {llm_eval['justification']}"
+    
+    cert_str = f"Recognized Certs ({', '.join(matched_cert_names)}): +{bonus_cert}%" if matched_cert_names else "Recognized Certs: +0%"
+    bonus_just = f"Academic Align: +{bonus_acad}%. Domain Knowledge: +{bonus_dom}%. {cert_str}."
 
-    return {
-        "education": education_list,  # Now returns the full array of degrees!
-        "experience_list": experience_list,
-        "skills": list(set(skills)),
-        "certifications": found_certs
+    # ==========================================
+    # 3. CORE SKILLS SCORING (25%)
+    # ==========================================
+    cv_skills_lower = json.dumps(cv.get("skills", "")).lower()
+    job_level = job.get("Level_of_career", "Entry")
+    rag_skills_for_level = load_rag_skills(job_level)
+
+    skill_groups = {
+        "Languages": "Languages",
+        "Cloud": "Cloud",
+        "DevOps": "DevOps",
+        "Data and Frameworks": "Data and Frameworks",
+        "AI": "AI",
+        "Visualization": "Visualization",
+        "Other": "Others"
     }
 
-# ==========================================
-# NEW: Job Ad Parsers for UI Tabs 4 & 5
-# ==========================================
-def extract_job_ad_llm(text):
-    prompt = f"""
-    Extract job requirements from this text.
-    Return STRICTLY valid JSON matching this structure:
-    {{
-        "qualification": "Required degree level and specific subject/major",
-        "min_experience": <float, required years>,
-        "skills_required": ["skill1", "skill2"],
-        "role_overview": "Brief 1-sentence summary"
-    }}
-    
-    [TEXT]
-    {text[:4000]}
-    """
-    payload = {"model": "qwen3:0.6B", "prompt": prompt, "stream": False, "format": "json", "options": {"temperature": 0.0}}
-    try:
-        res = requests.post("http://localhost:11434/api/generate", json=payload, timeout=15)
-        clean = re.sub(r"```json\n?|```", "", res.json().get("response", "{}")).strip()
-        return json.loads(clean)
-    except Exception:
-        return {}
+    total_skill_score = 0
+    skill_justification_parts = []
 
-@mcp.tool()
-def parse_job_ad_text(raw_text: str) -> dict:
-    """Used by Tab 4: Quick Paste Evaluator"""
-    return extract_job_ad_llm(raw_text)
-
-@mcp.tool()
-def parse_job_ad_pdf(pdf_base64: str) -> dict:
-    """Used by Tab 5: PDF Evaluator"""
-    md_text = extract_md_from_b64(pdf_base64)
-    if not md_text.strip(): 
-        return {"error": "Could not extract text from PDF."}
+    for job_key, rag_key in skill_groups.items():
+        matched_skills = []
+        is_rag_fallback = False
         
-    # FIX: Return the raw markdown text directly!
-    # Do NOT pass it through extract_job_ad_llm, which destroys the 
-    # Job Title and Company Name before the Orchestrator can parse it.
-    return {"raw_text": md_text}
+        job_val = str(job.get(job_key, "")).strip().lower()
+        if not job_val or job_val in ["n/a", "nan", "none"]:
+            is_rag_fallback = True
+            required_skills = [s.lower() for s in rag_skills_for_level.get(rag_key, [])]
+        else:
+            required_skills = [s.strip() for s in job_val.split(",") if s.strip()]
+            
+        for req in required_skills:
+            if req and req in cv_skills_lower:
+                matched_skills.append(req)
+                
+        group_score = min(len(matched_skills), 5)
+        total_skill_score += group_score
+        
+        source_str = "RAG Level Standard" if is_rag_fallback else "Job Req"
+        if matched_skills:
+            skill_justification_parts.append(f"{job_key} [{group_score}/5] (via {source_str}): {', '.join(matched_skills)}")
+        else:
+            skill_justification_parts.append(f"{job_key} [0/5] (via {source_str}): None matched")
+
+    final_skill_score = min(total_skill_score, 25.0)
+    skill_just = "\n".join(skill_justification_parts) + f"\n--> Total Cap Applied: {final_skill_score}/25"
+
+    # ==========================================
+    # FINAL CALCULATION
+    # ==========================================
+    base_score = exp_score + qual_score + final_skill_score
+    total_score = base_score + bonus_acad + bonus_dom + bonus_cert
+    
+    total_score = min(total_score, 100.0)
+
+    return {
+        "total_score": round(total_score, 1),
+        "breakdown": {
+            "experience_score_raw": round(exp_score, 1),
+            "qualification_score_raw": qual_score,
+            "skill_score_raw": round(final_skill_score, 1),
+            "bonuses": bonus_acad + bonus_dom + bonus_cert
+        },
+        "justification_data": {
+            "experience": exp_just,
+            "qualification": qual_just,
+            "skills": skill_just,
+            "bonuses": bonus_just
+        },
+        "final_math": f"Base ({base_score:.1f}) + Bonuses ({bonus_acad + bonus_dom + bonus_cert}) = {total_score}%"
+    }
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    mcp.run()
